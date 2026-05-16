@@ -14,34 +14,49 @@ import { doc, getDoc } from 'firebase/firestore';
 
 const CATEGORY_DATA: Record<string, { title: string; description: string; image: string }> = {
   men: {
-    title: "남성 성인용품",
-    description: "강렬한 퍼포먼스와 혁신적인 테크놀로지의 만남",
-    image: "https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&q=80&w=1920"
+    title: "남성용품",
+    description: "프리미엄 남성 전용 아이템",
+    image: "https://images.unsplash.com/photo-1618022325802-7e5e732d97a1?auto=format&fit=crop&q=80&w=1920"
+  },
+  men_acc: {
+    title: "남성보조용품",
+    description: "더욱 완벽한 경험을 위한 보조용품",
+    image: "https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&q=80&w=1920"
   },
   women: {
-    title: "여성 성인용품",
-    description: "섬세한 감각과 우아한 디자인의 프리미엄 컬렉션",
-    image: "https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&q=80&w=1920"
+    title: "여성용품",
+    description: "섬세한 감각을 깨우는 프리미엄 컬렉션",
+    image: "https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?auto=format&fit=crop&q=80&w=1920"
+  },
+  women_acc: {
+    title: "여성보조용품",
+    description: "특별한 순간을 위한 여성 보조용품",
+    image: "https://images.unsplash.com/photo-1518085250890-410c5a278916?auto=format&fit=crop&q=80&w=1920"
   },
   condoms: {
     title: "콘돔",
     description: "안전하고 건강한 사랑을 위한 필수 선택",
-    image: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80&w=1920"
+    image: "https://images.unsplash.com/photo-1614031679269-138379ba51fb?auto=format&fit=crop&q=80&w=1920"
   },
   lubes: {
     title: "러브젤",
     description: "부드럽고 매끄러운 경험의 완성",
-    image: "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&q=80&w=1920"
+    image: "https://images.unsplash.com/photo-1550246140-5119ae4790b8?auto=format&fit=crop&q=80&w=1920"
   },
-  others: {
-    title: "기타 성인용품",
-    description: "더욱 다채로운 즐거움을 위한 액세서리",
-    image: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=1920"
+  couple: {
+    title: "커플성인용품",
+    description: "둘만의 특별한 시간을 위한 아이템",
+    image: "https://images.unsplash.com/photo-1518144591331-17a5dd71c477?auto=format&fit=crop&q=80&w=1920"
   },
   lingerie: {
     title: "섹시속옷",
     description: "당신의 매력을 더욱 돋보이게 할 미드나잇 컬렉션",
-    image: "https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?auto=format&fit=crop&q=80&w=1920"
+    image: "https://images.unsplash.com/photo-1512413916298-5c4dd8bbab4d?auto=format&fit=crop&q=80&w=1920"
+  },
+  others: {
+    title: "기타 성인용품",
+    description: "더욱 다채로운 즐거움을 위한 액세서리",
+    image: "https://images.unsplash.com/photo-1557672172-298e090bd0f1?auto=format&fit=crop&q=80&w=1920"
   }
 };
 

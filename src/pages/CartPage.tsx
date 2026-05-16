@@ -27,7 +27,7 @@ export default function CartPage() {
           <h1 className="text-3xl font-headline font-bold">장바구니가 비어있습니다</h1>
           <p className="text-on-surface-variant leading-relaxed">
             아직 선택하신 상품이 없습니다. <br />
-            H&G스토아의 프리미엄 컬렉션을 둘러보세요.
+            핑크버튼의 프리미엄 컬렉션을 둘러보세요.
           </p>
           <Link 
             to="/" 
@@ -161,7 +161,7 @@ export default function CartPage() {
 
               <div className="pt-6 border-t border-outline-variant/10">
                 <p className="text-[10px] text-on-surface-variant/60 leading-relaxed">
-                  * H&G스토아는 고객님의 프라이버시를 위해 모든 상품을 익명으로 안전하게 배송합니다. <br />
+                  * 핑크버튼는 고객님의 프라이버시를 위해 모든 상품을 익명으로 안전하게 배송합니다. <br />
                   * 결제 완료 후 1-3일 이내에 배송이 시작됩니다.
                 </p>
               </div>

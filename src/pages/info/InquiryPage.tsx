@@ -65,58 +65,48 @@ export default function InquiryPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
           {/* 왼쪽 이미지 */}
-          <div className="w-full">
+          <div className="w-full h-full min-h-[400px]">
             <img
-              src="https://images.unsplash.com/photo-1581093588409-6b8b2f3bfc8c?auto=format&fit=crop&w=800&q=80"
+              src="https://images.unsplash.com/photo-1516321497487-e288fb19713f?auto=format&fit=crop&w=800&q=80"
               alt="Inquiry"
-              className="w-full h-full object-cover rounded-2xl"
+              className="w-full h-full object-cover rounded-2xl shadow-sm"
+              referrerPolicy="no-referrer"
             />
           </div>
 
           {/* 오른쪽 컨텐츠 */}
           <div className="space-y-8">
-            {/* 연락처 및 시간 (data?.content 가 있을 경우 마크다운 렌더링) */}
-            {data?.content && typeof data.content === 'string' ? (
-              <div className="space-y-6">
-                <div 
-                  className="markdown-body p-6 bg-surface-container-low rounded-2xl border border-outline-variant/10 text-sm text-on-surface-variant leading-relaxed prose prose-sm prose-on-surface max-w-none"
-                  dangerouslySetInnerHTML={{ __html: data.content }}
-                />
+            {/* 안내 문구 (Admin에서 작성한 내용) - 잘못된 HTML 코드가 있으면 숨김 */}
+            {data?.content && typeof data.content === 'string' && !data.content.toLowerCase().includes('<style') && !data.content.toLowerCase().includes('<!doctype') && (
+              <div className="p-6 bg-surface-container-lowest rounded-2xl border border-outline-variant/10 text-sm text-on-surface-variant leading-relaxed shadow-sm">
+                {data.content.split('\n').map((line: string, i: number) => (
+                  <React.Fragment key={i}>
+                    {line}
+                    <br />
+                  </React.Fragment>
+                ))}
               </div>
-            ) : (
-              <>
-                <div className="space-y-6">
-                  <h3 className="text-sm font-bold uppercase tracking-widest text-on-surface-variant">연락처</h3>
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-4 group cursor-pointer">
-                      <div className="w-10 h-10 bg-surface-container-low rounded-full flex items-center justify-center text-on-surface-variant group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                        <Mail size={18} />
-                      </div>
-                      <div>
-                        <p className="text-xs text-on-surface-variant/60">Email</p>
-                        <p className="text-sm font-medium">support@hng.com</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4 group cursor-pointer">
-                      <div className="w-10 h-10 bg-surface-container-low rounded-full flex items-center justify-center text-on-surface-variant group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                        <MessageCircle size={18} />
-                      </div>
-                      <div>
-                        <p className="text-xs text-on-surface-variant/60">Customer Service</p>
-                        <p className="text-sm font-medium">010-0000-0000</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-6 bg-surface-container-low rounded-2xl border border-outline-variant/10 text-xs text-on-surface-variant leading-relaxed">
-                  <p className="font-bold mb-2">운영 시간</p>
-                  평일: 10:00 - 18:00 <br />
-                  점심: 12:00 - 13:00 <br />
-                  토/일/공휴일 휴무
-                </div>
-              </>
             )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="p-6 bg-surface-container-low rounded-2xl border border-outline-variant/10 group cursor-pointer hover:bg-surface-container-high transition-colors">
+                <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4">
+                  <Mail size={24} />
+                </div>
+                <h3 className="font-bold text-on-surface mb-1">이메일 문의</h3>
+                <p className="text-sm font-medium text-on-surface-variant">support@hng.com</p>
+                <p className="text-xs text-on-surface-variant/60 mt-2">24시간 접수 가능<br/>운영 시간 내 순차적 답변</p>
+              </div>
+
+              <div className="p-6 bg-surface-container-low rounded-2xl border border-outline-variant/10 group cursor-pointer hover:bg-surface-container-high transition-colors">
+                <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4">
+                  <MessageCircle size={24} />
+                </div>
+                <h3 className="font-bold text-on-surface mb-1">고객 센터</h3>
+                <p className="text-sm font-medium text-on-surface-variant">010-0000-0000</p>
+                <p className="text-xs text-on-surface-variant/60 mt-2">평일 10:00 - 18:00<br/>점심 12:00 - 13:00</p>
+              </div>
+            </div>
 
             {/* 문의 폼 */}
             <AnimatePresence mode="wait">

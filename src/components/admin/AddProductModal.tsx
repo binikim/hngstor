@@ -5,21 +5,21 @@
 
 import React, { useState } from 'react';
 import { db, handleFirestoreError, OperationType } from '../../firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, getDoc, setDoc } from 'firebase/firestore';
 import { X as CloseIcon, Upload } from 'lucide-react';
 
 interface AddProductModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  categories?: string[];
 }
 
-export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProductModalProps) {
+export default function AddProductModal({ isOpen, onClose, onSuccess, categories = [] }: AddProductModalProps) {
   const [loading, setLoading] = useState(false);
-  const [isCustomCategory, setIsCustomCategory] = useState(false);
   const [newProduct, setNewProduct] = useState({
     name: '',
-    category: '여성 성인용품',
+    category: '남성용품',
     price: 0,
     stock: 0,
     image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=800'
@@ -49,11 +49,12 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         ...newProduct,
         createdAt: serverTimestamp()
       });
+
       onSuccess?.();
       onClose();
       setNewProduct({
         name: '',
-        category: '여성 성인용품',
+        category: '남성용품',
         price: 0,
         stock: 0,
         image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=800'
@@ -94,18 +95,26 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
             <div className="space-y-2">
               <label className="text-sm font-medium text-on-surface-variant">가격 (KRW)</label>
               <input 
-                type="number" required
-                value={newProduct.price}
-                onChange={e => setNewProduct({...newProduct, price: Number(e.target.value)})}
+                type="text" required
+                value={newProduct.price === 0 ? '' : newProduct.price.toLocaleString()}
+                onChange={e => {
+                  const val = e.target.value.replace(/[^0-9]/g, '');
+                  setNewProduct({...newProduct, price: val ? Number(val) : 0});
+                }}
+                placeholder="0"
                 className="w-full bg-surface-container-lowest border-none rounded-xl py-3 px-4 focus:ring-1 focus:ring-primary"
               />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-on-surface-variant">재고</label>
               <input 
-                type="number" required
-                value={newProduct.stock}
-                onChange={e => setNewProduct({...newProduct, stock: Number(e.target.value)})}
+                type="text" required
+                value={newProduct.stock === 0 ? '' : newProduct.stock.toLocaleString()}
+                onChange={e => {
+                  const val = e.target.value.replace(/[^0-9]/g, '');
+                  setNewProduct({...newProduct, stock: val ? Number(val) : 0});
+                }}
+                placeholder="0"
                 className="w-full bg-surface-container-lowest border-none rounded-xl py-3 px-4 focus:ring-1 focus:ring-primary"
               />
             </div>
@@ -114,36 +123,26 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
           <div className="space-y-2">
             <label className="text-sm font-medium text-on-surface-variant">카테고리</label>
             <select 
-              value={isCustomCategory ? 'custom' : newProduct.category}
-              onChange={e => {
-                if (e.target.value === 'custom') {
-                  setIsCustomCategory(true);
-                  setNewProduct({...newProduct, category: ''});
-                } else {
-                  setIsCustomCategory(false);
-                  setNewProduct({...newProduct, category: e.target.value});
-                }
-              }}
+              value={newProduct.category}
+              onChange={e => setNewProduct({...newProduct, category: e.target.value})}
               className="w-full bg-surface-container-lowest border-none rounded-xl py-3 px-4 focus:ring-1 focus:ring-primary"
             >
-              <option value="남성 성인용품">남성 성인용품</option>
-              <option value="여성 성인용품">여성 성인용품</option>
-              <option value="콘돔">콘돔</option>
-              <option value="러브젤">러브젤</option>
-              <option value="기타 성인용품">기타 성인용품</option>
-              <option value="섹시속옷">섹시속옷</option>
-              <option value="custom">+ 직접 입력 (새 카테고리 추가)</option>
+              {categories.length > 0 ? categories.map(c => (
+                <option key={c} value={c}>{c}</option>
+              )) : (
+                <>
+                  <option value="남성용품">남성용품</option>
+                  <option value="남성보조용품">남성보조용품</option>
+                  <option value="여성용품">여성용품</option>
+                  <option value="여성보조용품">여성보조용품</option>
+                  <option value="콘돔">콘돔</option>
+                  <option value="러브젤">러브젤</option>
+                  <option value="커플성인용품">커플성인용품</option>
+                  <option value="섹시속옷">섹시속옷</option>
+                  <option value="기타 성인용품">기타 성인용품</option>
+                </>
+              )}
             </select>
-            {isCustomCategory && (
-              <input 
-                type="text" required
-                value={newProduct.category}
-                onChange={e => setNewProduct({...newProduct, category: e.target.value})}
-                placeholder="새로운 카테고리명을 입력하세요"
-                className="w-full bg-surface-container-lowest border-none rounded-xl py-3 px-4 focus:ring-1 focus:ring-primary mt-2"
-                autoFocus
-              />
-            )}
           </div>
 
           <div className="space-y-2">

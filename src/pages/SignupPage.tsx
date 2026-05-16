@@ -235,7 +235,7 @@ export default function SignupPage() {
         <div className="text-center mb-10">
           <h1 className="text-3xl font-headline font-bold mb-2">회원가입</h1>
           <p className="text-on-surface-variant font-light">
-            H&G스토아의 멤버가 되어 프리미엄 혜택을 누리세요
+            핑크버튼의 멤버가 되어 프리미엄 혜택을 누리세요
           </p>
         </div>
 

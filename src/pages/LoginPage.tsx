@@ -185,7 +185,7 @@ export default function LoginPage() {
         <div className="text-center mb-10">
           <h1 className="text-3xl font-headline font-bold mb-2">반갑습니다</h1>
           <p className="text-on-surface-variant font-light">
-            {isAdminPath ? '관리자 모드로 로그인합니다' : 'H&G스토아에 오신 것을 환영합니다'}
+            {isAdminPath ? '관리자 모드로 로그인합니다' : '핑크버튼에 오신 것을 환영합니다'}
           </p>
         </div>
 

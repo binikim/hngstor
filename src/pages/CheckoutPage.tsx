@@ -211,7 +211,7 @@ export default function CheckoutPage() {
             </div>
             <h1 className="text-3xl font-headline font-bold">주문이 완료되었습니다!</h1>
             <p className="text-on-surface-variant leading-relaxed">
-              H&G스토아를 이용해 주셔서 감사합니다. <br />
+              핑크버튼를 이용해 주셔서 감사합니다. <br />
               고객님의 프라이버시를 위해 송장에는 <br />
               <span className="text-primary font-bold">'의류' 또는 '생활잡화'</span>로 기재되어 안전하게 배송됩니다.
             </p>

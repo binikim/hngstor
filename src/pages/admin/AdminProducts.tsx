@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { db, handleFirestoreError, OperationType } from '../../firebase';
-import { collection, onSnapshot, query, orderBy, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, deleteDoc, doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
 import { Plus, Trash2, Package, Search, Edit2, Check, X as CloseIcon, Upload, Image as ImageIcon } from 'lucide-react';
 import AddProductModal from '../../components/admin/AddProductModal';
 
@@ -28,7 +28,7 @@ export default function AdminProducts() {
   const [tempStock, setTempStock] = useState<number>(0);
   const [editLoading, setEditLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('전체');
-  const [isEditCustomCategory, setIsEditCustomCategory] = useState(false);
+  const [dynamicCategories, setDynamicCategories] = useState<string[]>([]);
 
   useEffect(() => {
     const q = query(collection(db, 'products'), orderBy('createdAt', 'desc'));
@@ -39,7 +39,17 @@ export default function AdminProducts() {
     }, (error) => {
       handleFirestoreError(error, OperationType.LIST, 'products');
     });
-    return () => unsubscribe();
+
+    const catUnsubscribe = onSnapshot(doc(db, 'siteContent', 'categories'), (docSnap) => {
+      if (docSnap.exists() && Array.isArray(docSnap.data().content)) {
+        setDynamicCategories(docSnap.data().content.map((c: any) => c.title));
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      catUnsubscribe();
+    };
   }, []);
 
   const handleEditProduct = async (e: React.FormEvent) => {
@@ -49,6 +59,7 @@ export default function AdminProducts() {
     try {
       const { id, ...data } = editingProduct;
       await updateDoc(doc(db, 'products', id), data);
+
       setShowEditModal(false);
       setEditingProduct(null);
     } catch (error) {
@@ -99,8 +110,8 @@ export default function AdminProducts() {
     reader.readAsDataURL(file);
   };
 
-  const categories = ['전체', ...Array.from(new Set(products.map(p => p.category)))];
-  const uniqueEditCategories = Array.from(new Set([...products.map(p => p.category), '남성 성인용품', '여성 성인용품', '콘돔', '러브젤', '기타 성인용품', '섹시속옷']));
+  const categories = ['전체', ...Array.from(new Set([...products.map(p => p.category), ...dynamicCategories]))];
+  const uniqueEditCategories = Array.from(new Set([...dynamicCategories, ...products.map(p => p.category)]));
   const filteredProducts = selectedCategory === '전체' ? products : products.filter(p => p.category === selectedCategory);
 
   return (
@@ -195,7 +206,6 @@ export default function AdminProducts() {
                       <button 
                         onClick={() => {
                           setEditingProduct(product);
-                          setIsEditCustomCategory(false);
                           setShowEditModal(true);
                         }}
                         className="p-2 text-on-surface-variant hover:text-primary transition-colors"
@@ -223,6 +233,7 @@ export default function AdminProducts() {
       <AddProductModal 
         isOpen={showAddModal} 
         onClose={() => setShowAddModal(false)} 
+        categories={uniqueEditCategories}
       />
 
       {/* Edit Modal */}
@@ -245,18 +256,26 @@ export default function AdminProducts() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-on-surface-variant">가격 (KRW)</label>
                   <input 
-                    type="number" required
-                    value={editingProduct.price}
-                    onChange={e => setEditingProduct({...editingProduct, price: Number(e.target.value)})}
+                    type="text" required
+                    value={editingProduct.price === 0 ? '' : editingProduct.price.toLocaleString()}
+                    onChange={e => {
+                      const val = e.target.value.replace(/[^0-9]/g, '');
+                      setEditingProduct({...editingProduct, price: val ? Number(val) : 0});
+                    }}
+                    placeholder="0"
                     className="w-full bg-surface-container-lowest border-none rounded-xl py-3 px-4 focus:ring-1 focus:ring-primary"
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-on-surface-variant">재고</label>
                   <input 
-                    type="number" required
-                    value={editingProduct.stock}
-                    onChange={e => setEditingProduct({...editingProduct, stock: Number(e.target.value)})}
+                    type="text" required
+                    value={editingProduct.stock === 0 ? '' : editingProduct.stock.toLocaleString()}
+                    onChange={e => {
+                      const val = e.target.value.replace(/[^0-9]/g, '');
+                      setEditingProduct({...editingProduct, stock: val ? Number(val) : 0});
+                    }}
+                    placeholder="0"
                     className="w-full bg-surface-container-lowest border-none rounded-xl py-3 px-4 focus:ring-1 focus:ring-primary"
                   />
                 </div>
@@ -264,33 +283,14 @@ export default function AdminProducts() {
               <div className="space-y-2">
                 <label className="text-sm font-medium text-on-surface-variant">카테고리</label>
                 <select 
-                  value={isEditCustomCategory ? 'custom' : editingProduct.category}
-                  onChange={e => {
-                    if (e.target.value === 'custom') {
-                      setIsEditCustomCategory(true);
-                      setEditingProduct({...editingProduct, category: ''});
-                    } else {
-                      setIsEditCustomCategory(false);
-                      setEditingProduct({...editingProduct, category: e.target.value});
-                    }
-                  }}
+                  value={editingProduct.category}
+                  onChange={e => setEditingProduct({...editingProduct, category: e.target.value})}
                   className="w-full bg-surface-container-lowest border-none rounded-xl py-3 px-4 focus:ring-1 focus:ring-primary"
                 >
                   {uniqueEditCategories.map(c => (
                     <option key={c} value={c}>{c}</option>
                   ))}
-                  <option value="custom">+ 직접 입력 (새 카테고리 추가)</option>
                 </select>
-                {isEditCustomCategory && (
-                  <input 
-                    type="text" required
-                    value={editingProduct.category}
-                    onChange={e => setEditingProduct({...editingProduct, category: e.target.value})}
-                    placeholder="새로운 카테고리명을 입력하세요"
-                    className="w-full bg-surface-container-lowest border-none rounded-xl py-3 px-4 focus:ring-1 focus:ring-primary mt-2"
-                    autoFocus
-                  />
-                )}
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-on-surface-variant">이미지 수정</label>

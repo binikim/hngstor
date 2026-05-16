@@ -29,7 +29,7 @@ interface Product {
 }
 
 interface Category {
-  id: number;
+  id: string | number;
   title: string;
   description: string;
   image: string;
@@ -38,30 +38,7 @@ interface Category {
 }
 
 // --- Mock Data ---
-const CATEGORIES: Category[] = [
-  {
-    id: 1,
-    title: "여성 전용 라인",
-    description: "섬세한 감각을 깨우는 프리미엄 컬렉션",
-    image: "https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&q=80&w=800",
-    path: "/category/women",
-    span: "md:col-span-2"
-  },
-  {
-    id: 2,
-    title: "러브젤",
-    description: "부드러운 경험의 완성",
-    image: "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&q=80&w=800",
-    path: "/category/lubes"
-  },
-  {
-    id: 3,
-    title: "남성 기구",
-    description: "강렬한 퍼포먼스 테크놀로지",
-    image: "https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&q=80&w=800",
-    path: "/category/men"
-  }
-];
+// CATEGORIES are fetched dynamically
 
 const Hero = ({ content }: { content?: any }) => {
   return (
@@ -78,27 +55,19 @@ const Hero = ({ content }: { content?: any }) => {
 
       <div className="relative z-10 max-w-[1920px] mx-auto px-6 md:px-12 w-full">
         <motion.div 
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="max-w-2xl"
         >
           <h1 
-            className="text-6xl md:text-9xl font-serif font-medium tracking-tighter mb-6 leading-[0.85] break-keep"
-            dangerouslySetInnerHTML={{ __html: content?.heroTitle || '감각의 <br />\n<span class="text-primary italic">예술.</span>' }}
+            className="text-5xl md:text-7xl font-serif font-bold tracking-tight mb-8 leading-tight break-keep text-on-surface"
+            dangerouslySetInnerHTML={{ __html: content?.heroTitle || '감각의 <br />\n<span class="text-primary">예술.</span>' }}
           />
           <p 
-            className="text-lg md:text-xl text-on-surface-variant mb-10 leading-relaxed font-light max-w-lg font-sans break-keep"
-            dangerouslySetInnerHTML={{ __html: content?.heroSubtitle || '당신의 가장 사적인 순간을 위한 큐레이션. <br />\nH&G스토아에서 엄선한 프리미엄 감각을 경험하세요.' }}
+            className="text-lg md:text-xl text-on-surface-variant leading-relaxed font-light max-w-lg break-keep"
+            dangerouslySetInnerHTML={{ __html: content?.heroSubtitle || '당신의 가장 사적인 순간을 위한 큐레이션. <br />\n핑크버튼에서 엄선한 프리미엄 감각을 경험하세요.' }}
           />
-          <div className="flex flex-wrap gap-4">
-            <button className="px-8 py-4 bg-primary text-on-primary font-bold rounded-lg hover:bg-primary-container transition-all transform hover:scale-105 active:scale-95">
-              지금 둘러보기
-            </button>
-            <button className="px-8 py-4 bg-surface-container-highest border border-outline-variant/10 text-on-surface font-semibold rounded-lg hover:bg-surface-container-high transition-all">
-              신상품 보기
-            </button>
-          </div>
         </motion.div>
       </div>
     </section>
@@ -237,7 +206,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [homeContent, setHomeContent] = useState<any>(null);
 
-  const [categoriesData, setCategoriesData] = useState<Category[]>(CATEGORIES);
+  const [categoriesData, setCategoriesData] = useState<Category[]>([]);
 
   useEffect(() => {
     seedProducts(); // Seed if empty
@@ -401,7 +370,7 @@ export default function Home() {
             />
             <p 
               className="text-on-surface-variant text-lg md:text-xl leading-relaxed max-w-2xl mx-auto font-light font-sans whitespace-pre-line break-keep"
-              dangerouslySetInnerHTML={{ __html: homeContent?.philosophySubtitle || 'H&G스토아는 엄선된 품질과 세련된 디자인을 통해 성인용품에 대한 새로운 기준을 제시합니다. \n모든 제품은 당신의 프라이버시를 최우선으로 생각하며 안전하게 배송됩니다.' }}
+              dangerouslySetInnerHTML={{ __html: homeContent?.philosophySubtitle || '핑크버튼는 엄선된 품질과 세련된 디자인을 통해 성인용품에 대한 새로운 기준을 제시합니다. \n모든 제품은 당신의 프라이버시를 최우선으로 생각하며 안전하게 배송됩니다.' }}
             />
           </motion.div>
         </div>

@@ -177,7 +177,7 @@ export default function MyOrdersPage() {
             <h2 className="text-2xl font-headline font-bold">주문 내역이 없습니다</h2>
             <p className="text-on-surface-variant max-w-xs mx-auto">
               아직 주문하신 내역이 없습니다. <br />
-              H&G스토아의 다양한 상품을 만나보세요.
+              핑크버튼의 다양한 상품을 만나보세요.
             </p>
             <Link 
               to="/" 

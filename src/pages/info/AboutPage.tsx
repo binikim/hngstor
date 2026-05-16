@@ -48,7 +48,7 @@ export default function AboutPage() {
           className="text-center space-y-4"
         >
           <h1 className="text-4xl md:text-6xl font-headline font-bold">
-            {data?.title || 'About H&G스토아'}
+            {data?.title || 'About 핑크버튼'}
           </h1>
           {!data && (
             <p className="text-xl text-on-surface-variant font-light">
@@ -74,7 +74,7 @@ export default function AboutPage() {
                 </div>
                 <h2 className="text-2xl font-headline font-bold">우리의 미션</h2>
                 <p className="text-on-surface-variant leading-relaxed">
-                  H&G스토아는 성에 대한 건강하고 당당한 담론을 지향합니다. 
+                  핑크버튼는 성에 대한 건강하고 당당한 담론을 지향합니다. 
                   단순히 제품을 판매하는 것을 넘어, 성적 취향의 다양성을 존중하고 
                   모든 개인이 자신의 감각에 집중할 수 있는 환경을 만듭니다.
                 </p>

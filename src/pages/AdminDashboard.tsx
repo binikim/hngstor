@@ -262,7 +262,7 @@ export default function AdminDashboard() {
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
           <div>
             <h1 className="text-4xl font-headline font-bold mb-2">관리자 센터</h1>
-            <p className="text-on-surface-variant font-light">H&G스토아 운영을 위한 통합 관리 시스템입니다.</p>
+            <p className="text-on-surface-variant font-light">핑크버튼 운영을 위한 통합 관리 시스템입니다.</p>
           </div>
           <button 
             onClick={handleLogout}

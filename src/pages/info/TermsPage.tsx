@@ -63,14 +63,14 @@ export default function TermsPage() {
             <>
               <section>
                 <h2 className="text-xl font-bold text-on-surface mb-4">제1조 (목적)</h2>
-                <p>이 약관은 H&G스토아가 운영하는 인터넷 쇼핑몰(이하 '몰')에서 제공하는 관련 서비스(이하 '서비스')를 이용함에 있어 몰과 이용자의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.</p>
+                <p>이 약관은 핑크버튼가 운영하는 인터넷 쇼핑몰(이하 '몰')에서 제공하는 관련 서비스(이하 '서비스')를 이용함에 있어 몰과 이용자의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.</p>
               </section>
 
               <section>
                 <h2 className="text-xl font-bold text-on-surface mb-4">제2조 (이용자의 자격 및 제한)</h2>
                 <div className="bg-error/5 p-4 rounded-xl border border-error/10 flex gap-3 mb-4">
                   <ShieldAlert className="text-error shrink-0" size={20} />
-                  <p className="text-sm font-bold text-error">H&G스토아는 만 19세 이상의 성인만을 대상으로 서비스를 제공합니다. 청소년의 이용은 엄격히 제한됩니다.</p>
+                  <p className="text-sm font-bold text-error">핑크버튼는 만 19세 이상의 성인만을 대상으로 서비스를 제공합니다. 청소년의 이용은 엄격히 제한됩니다.</p>
                 </div>
                 <ul className="list-disc pl-5 space-y-2">
                   <li>회원가입 시 본인인증을 통한 성인 여부 확인이 필수적입니다.</li>

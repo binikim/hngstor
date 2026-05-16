@@ -63,7 +63,7 @@ export default function PrivacyPage() {
                  <EyeOff className="text-primary shrink-0" size={24} />
                  <div>
                    <h3 className="font-bold text-on-surface mb-2">프라이버시 중심 정책</h3>
-                   <p className="text-sm">H&G스토아는 불필요한 개인정보를 수집하지 않으며, 수집된 정보는 주문 및 배송 목적 외에 절대 사용하지 않습니다.</p>
+                   <p className="text-sm">핑크버튼는 불필요한 개인정보를 수집하지 않으며, 수집된 정보는 주문 및 배송 목적 외에 절대 사용하지 않습니다.</p>
                  </div>
               </div>
 

@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { db, handleFirestoreError, OperationType } from '../../firebase';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { motion } from 'motion/react';
-import { Save, Info, Plus, Trash2, HelpCircle, FileText, Shield, FileCheck, MessageCircle, LayoutDashboard, Building2, Grid, MoveUp, MoveDown } from 'lucide-react';
+import { Save, Info, Plus, Trash2, HelpCircle, FileText, Shield, FileCheck, MessageCircle, LayoutDashboard, Building2, Grid, MoveUp, MoveDown, Upload } from 'lucide-react';
 
 interface SiteContent {
   id: string;
@@ -79,9 +79,9 @@ export default function AdminContent() {
           getDoc(doc(db, 'siteContent', 'privacy'))
         ]);
         setContent({
-          about: aboutSnap.exists() ? aboutSnap.data().content : `H&G스토아는 성에 대한 건강하고 당당한 담론을 지향합니다. \n단순히 제품을 판매하는 것을 넘어, 성적 취향의 다양성을 존중하고 모든 개인이 자신의 감각에 집중할 수 있는 환경을 만듭니다.`,
-          terms: termsSnap.exists() ? termsSnap.data().content : `이 약관은 H&G스토아가 운영하는 쇼핑몰 서비스를 이용함에 있어 몰과 이용자의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.`,
-          privacy: privacySnap.exists() ? privacySnap.data().content : `H&G스토아는 귀하의 프라이버시를 소중히 여깁니다. 수집된 정보는 배송 및 고객 응대 목적으로만 활용됩니다.`,
+          about: aboutSnap.exists() ? aboutSnap.data().content : `핑크버튼는 성에 대한 건강하고 당당한 담론을 지향합니다. \n단순히 제품을 판매하는 것을 넘어, 성적 취향의 다양성을 존중하고 모든 개인이 자신의 감각에 집중할 수 있는 환경을 만듭니다.`,
+          terms: termsSnap.exists() ? termsSnap.data().content : `이 약관은 핑크버튼가 운영하는 쇼핑몰 서비스를 이용함에 있어 몰과 이용자의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.`,
+          privacy: privacySnap.exists() ? privacySnap.data().content : `핑크버튼는 귀하의 프라이버시를 소중히 여깁니다. 수집된 정보는 배송 및 고객 응대 목적으로만 활용됩니다.`,
         });
         setTitle('정보 페이지 관리');
       } else if (activePage === 'support') {
@@ -104,8 +104,8 @@ export default function AdminContent() {
           
           if (activePage === 'footer') {
             mergedContent = {
-              logoText: 'H&G스토아',
-              copyrightText: '© 2024 H&G스토아. 본 사이트는 만 19세 미만의 청소년의 출입을 금합니다. 성인 인증 후 모든 콘텐츠 이용이 가능합니다.',
+              logoText: '핑크버튼',
+              copyrightText: '© 2024 핑크버튼. 본 사이트는 만 19세 미만의 청소년의 출입을 금합니다. 성인 인증 후 모든 콘텐츠 이용이 가능합니다.',
               businessNumber: '000-00-00000',
               ceo: 'H&G 팀',
               phone: '00-000-0000',
@@ -116,10 +116,10 @@ export default function AdminContent() {
           } else if (activePage === 'home') {
             mergedContent = {
               heroTitle: '감각의 <br />\n<span class="text-primary italic">예술.</span>',
-              heroSubtitle: '당신의 가장 사적인 순간을 위한 큐레이션. <br />\nH&G스토아에서 엄선한 프리미엄 감각을 경험하세요.',
+              heroSubtitle: '당신의 가장 사적인 순간을 위한 큐레이션. <br />\n핑크버튼에서 엄선한 프리미엄 감각을 경험하세요.',
               heroImage: 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=1920',
               philosophyTitle: '우리는 단순한 상점이 아닌, <br />\n당신의 <span class="text-primary italic">가장 아름다운 순간</span>을 디자인합니다.',
-              philosophySubtitle: 'H&G스토아는 엄선된 품질과 세련된 디자인을 통해 성인용품에 대한 새로운 기준을 제시합니다. \n모든 제품은 당신의 프라이버시를 최우선으로 생각하며 안전하게 배송됩니다.',
+              philosophySubtitle: '핑크버튼는 엄선된 품질과 세련된 디자인을 통해 성인용품에 대한 새로운 기준을 제시합니다. \n모든 제품은 당신의 프라이버시를 최우선으로 생각하며 안전하게 배송됩니다.',
               philosophyImage: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=1920',
               categoriesTitle: '베스트 카테고리',
               categoriesSubtitle: '큐레이션 컬렉션',
@@ -137,10 +137,10 @@ export default function AdminContent() {
         if (activePage === 'home') {
           defaultContent = {
             heroTitle: '감각의 <br />\n<span class="text-primary italic">예술.</span>',
-            heroSubtitle: '당신의 가장 사적인 순간을 위한 큐레이션. <br />\nH&G스토아에서 엄선한 프리미엄 감각을 경험하세요.',
+            heroSubtitle: '당신의 가장 사적인 순간을 위한 큐레이션. <br />\n핑크버튼에서 엄선한 프리미엄 감각을 경험하세요.',
             heroImage: 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=1920',
             philosophyTitle: '우리는 단순한 상점이 아닌, <br />\n당신의 <span class="text-primary italic">가장 아름다운 순간</span>을 디자인합니다.',
-            philosophySubtitle: 'H&G스토아는 엄선된 품질과 세련된 디자인을 통해 성인용품에 대한 새로운 기준을 제시합니다. \n모든 제품은 당신의 프라이버시를 최우선으로 생각하며 안전하게 배송됩니다.',
+            philosophySubtitle: '핑크버튼는 엄선된 품질과 세련된 디자인을 통해 성인용품에 대한 새로운 기준을 제시합니다. \n모든 제품은 당신의 프라이버시를 최우선으로 생각하며 안전하게 배송됩니다.',
             philosophyImage: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=1920',
             categoriesTitle: '베스트 카테고리',
             categoriesSubtitle: '큐레이션 컬렉션',
@@ -158,8 +158,8 @@ export default function AdminContent() {
           ];
         } else if (activePage === 'footer') {
           defaultContent = {
-            logoText: 'H&G스토아',
-            copyrightText: '© 2024 H&G스토아. 본 사이트는 만 19세 미만의 청소년의 출입을 금합니다. 성인 인증 후 모든 콘텐츠 이용이 가능합니다.',
+            logoText: '핑크버튼',
+            copyrightText: '© 2024 핑크버튼. 본 사이트는 만 19세 미만의 청소년의 출입을 금합니다. 성인 인증 후 모든 콘텐츠 이용이 가능합니다.',
             businessNumber: '000-00-00000',
             ceo: 'H&G 팀',
             phone: '00-000-0000',
@@ -208,6 +208,22 @@ export default function AdminContent() {
       setSaving(false);
     }
   }
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, callback: (base64: string) => void) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 500 * 1024) {
+      alert('이미지 크기가 너무 큽니다. 500KB 이하의 이미지를 사용해주세요.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      callback(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleFaqChange = (index: number, field: 'question' | 'answer', value: string) => {
     const newFaq = [...content.faq];
@@ -308,13 +324,27 @@ export default function AdminContent() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-on-surface-variant">배경 이미지 URL</label>
-                    <input 
-                      type="text"
-                      value={content?.heroImage || ''}
-                      onChange={(e) => setContent({ ...content, heroImage: e.target.value })}
-                      className="w-full bg-transparent border border-outline-variant/10 rounded-lg p-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary font-mono"
-                    />
+                    <label className="text-xs font-medium text-on-surface-variant">배경 이미지 (URL 또는 업로드)</label>
+                    <div className="flex gap-2">
+                      <input 
+                        type="text"
+                        value={content?.heroImage || ''}
+                        onChange={(e) => setContent({ ...content, heroImage: e.target.value })}
+                        className="flex-1 bg-transparent border border-outline-variant/10 rounded-lg p-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary font-mono"
+                        placeholder="https://..."
+                      />
+                      <label className="flex items-center gap-2 px-4 py-2 bg-surface-container-high hover:bg-surface-container-highest cursor-pointer rounded-lg text-sm font-medium transition-all">
+                        <Upload size={16} /> 업로드
+                        <input 
+                          type="file" 
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleImageUpload(e, (base64) => {
+                            setContent({ ...content, heroImage: base64 });
+                          })}
+                        />
+                      </label>
+                    </div>
                   </div>
                 </div>
 
@@ -483,12 +513,22 @@ export default function AdminContent() {
                       key={index} 
                       className="p-6 bg-surface-container-lowest rounded-xl border border-outline-variant/5 relative group space-y-4"
                     >
-                      <div className="flex justify-between items-start">
+                      <div className="flex justify-between items-center pb-4 border-b border-outline-variant/5">
                         <div className="flex items-center gap-4">
-                          <span className="font-bold text-on-surface text-xl">{index + 1}</span>
-                          {item.image && (
-                            <img src={item.image} alt={item.title} className="w-16 h-16 object-cover rounded-lg" referrerPolicy="no-referrer" />
+                          <div className="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-on-surface-variant">
+                            {index + 1}
+                          </div>
+                          {item.image ? (
+                            <img src={item.image} alt={item.title} className="w-12 h-12 object-cover rounded-lg shadow-sm" referrerPolicy="no-referrer" />
+                          ) : (
+                            <div className="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center text-xs text-on-surface-variant text-center leading-tight">
+                              이미지<br/>없음
+                            </div>
                           )}
+                          <div className="flex flex-col">
+                            <span className="font-bold text-on-surface">{item.title || '(제목 없음)'}</span>
+                            <span className="text-xs text-on-surface-variant">{item.id || '(ID 없음)'}</span>
+                          </div>
                         </div>
                         <div className="flex gap-2">
                           <button 
@@ -535,7 +575,7 @@ export default function AdminContent() {
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <label className="text-xs font-medium text-on-surface-variant">고유 ID (예: women, men)</label>
+                          <label className="text-xs font-medium text-on-surface-variant">고유 ID <span className="text-[10px] opacity-60">(예: women, men)</span></label>
                           <input 
                             value={item.id}
                             onChange={(e) => {
@@ -543,11 +583,11 @@ export default function AdminContent() {
                               newContent[index].id = e.target.value;
                               setContent(newContent);
                             }}
-                            className="w-full bg-transparent border border-outline-variant/10 rounded-lg p-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary font-mono"
+                            className="w-full bg-transparent border border-outline-variant/10 rounded-lg p-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary font-mono"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-xs font-medium text-on-surface-variant">타이틀</label>
+                          <label className="text-xs font-medium text-on-surface-variant">타이틀 <span className="text-[10px] opacity-60">(표시될 이름)</span></label>
                           <input 
                             value={item.title}
                             onChange={(e) => {
@@ -555,7 +595,7 @@ export default function AdminContent() {
                               newContent[index].title = e.target.value;
                               setContent(newContent);
                             }}
-                            className="w-full bg-transparent border border-outline-variant/10 rounded-lg p-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary"
+                            className="w-full bg-transparent border border-outline-variant/10 rounded-lg p-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary"
                           />
                         </div>
                         <div className="space-y-1 md:col-span-2">
@@ -567,23 +607,39 @@ export default function AdminContent() {
                               newContent[index].description = e.target.value;
                               setContent(newContent);
                             }}
-                            className="w-full bg-transparent border border-outline-variant/10 rounded-lg p-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary"
+                            className="w-full bg-transparent border border-outline-variant/10 rounded-lg p-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary"
                           />
                         </div>
                         <div className="space-y-1 md:col-span-2">
-                          <label className="text-xs font-medium text-on-surface-variant">이미지 URL</label>
-                          <input 
-                            value={item.image}
-                            onChange={(e) => {
-                              const newContent = [...content];
-                              newContent[index].image = e.target.value;
-                              setContent(newContent);
-                            }}
-                            className="w-full bg-transparent border border-outline-variant/10 rounded-lg p-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary font-mono"
-                          />
+                          <label className="text-xs font-medium text-on-surface-variant">이미지 (URL 또는 업로드)</label>
+                          <div className="flex gap-2">
+                            <input 
+                              value={item.image}
+                              onChange={(e) => {
+                                const newContent = [...content];
+                                newContent[index].image = e.target.value;
+                                setContent(newContent);
+                              }}
+                              className="flex-1 bg-transparent border border-outline-variant/10 rounded-lg p-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary font-mono"
+                              placeholder="https://..."
+                            />
+                            <label className="flex items-center gap-2 px-4 py-2 bg-surface-container-high hover:bg-surface-container-highest cursor-pointer rounded-lg text-sm font-medium transition-all shrink-0">
+                              <Upload size={16} /> <span className="hidden sm:inline">업로드</span>
+                              <input 
+                                type="file" 
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => handleImageUpload(e, (base64) => {
+                                  const newContent = [...content];
+                                  newContent[index].image = base64;
+                                  setContent(newContent);
+                                })}
+                              />
+                            </label>
+                          </div>
                         </div>
                         <div className="space-y-1">
-                          <label className="text-xs font-medium text-on-surface-variant">링크 경로 (예: /category/women)</label>
+                          <label className="text-xs font-medium text-on-surface-variant">링크 경로 <span className="text-[10px] opacity-60">(예: /category/women)</span></label>
                           <input 
                             value={item.path}
                             onChange={(e) => {
@@ -591,11 +647,11 @@ export default function AdminContent() {
                               newContent[index].path = e.target.value;
                               setContent(newContent);
                             }}
-                            className="w-full bg-transparent border border-outline-variant/10 rounded-lg p-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary font-mono"
+                            className="w-full bg-transparent border border-outline-variant/10 rounded-lg p-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary font-mono"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-xs font-medium text-on-surface-variant">그리드 크기 (예: md:col-span-2)</label>
+                          <label className="text-xs font-medium text-on-surface-variant">그리드 크기 <span className="text-[10px] opacity-60">(예: md:col-span-2)</span></label>
                           <input 
                             value={item.span || ''}
                             onChange={(e) => {
@@ -603,7 +659,7 @@ export default function AdminContent() {
                               newContent[index].span = e.target.value;
                               setContent(newContent);
                             }}
-                            className="w-full bg-transparent border border-outline-variant/10 rounded-lg p-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary font-mono"
+                            className="w-full bg-transparent border border-outline-variant/10 rounded-lg p-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary font-mono"
                           />
                         </div>
                       </div>
@@ -624,6 +680,35 @@ export default function AdminContent() {
                         onChange={(e) => setContent({ ...content, logoText: e.target.value })}
                         className="w-full bg-transparent border border-outline-variant/10 rounded-lg p-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary font-bold"
                       />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-on-surface-variant">로고 이미지 업로드 (업로드 시 텍스트 대신 이미지가 출력됩니다)</label>
+                      <div className="flex gap-4 items-center">
+                        {content?.logoImage && (
+                          <div className="w-16 h-16 bg-surface-container-high rounded-lg p-2 flex items-center justify-center">
+                            <img src={content.logoImage} alt="Logo" className="max-w-full max-h-full object-contain" />
+                          </div>
+                        )}
+                        <label className="flex items-center gap-2 px-4 py-2 bg-surface-container-high hover:bg-surface-container-highest cursor-pointer rounded-lg text-sm font-medium transition-all">
+                          <Upload size={16} /> 업로드
+                          <input 
+                            type="file" 
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleImageUpload(e, (base64) => {
+                              setContent({ ...content, logoImage: base64 });
+                            })}
+                          />
+                        </label>
+                        {content?.logoImage && (
+                          <button 
+                            onClick={() => setContent({ ...content, logoImage: null })}
+                            className="text-xs text-error hover:underline px-2"
+                          >
+                            이미지 삭제
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-medium text-on-surface-variant">카피라이트 및 안내문 (HTML 지원)</label>
