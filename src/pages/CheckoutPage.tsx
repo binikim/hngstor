@@ -35,6 +35,8 @@ export default function CheckoutPage() {
   const [isOrdered, setIsOrdered] = useState(false);
   const [isPostcodeOpen, setIsPostcodeOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orderedItems, setOrderedItems] = useState<any[]>([]);
+  const [orderedTotalPrice, setOrderedTotalPrice] = useState(0);
 
   // Form states
   const [formData, setFormData] = useState({
@@ -228,8 +230,10 @@ export default function CheckoutPage() {
         return; // Stop here if stock update fails
       }
 
-      setIsOrdered(true);
+      setOrderedItems([...cart]);
+      setOrderedTotalPrice(totalPrice);
       clearCart();
+      setIsOrdered(true);
     } catch (error: any) {
       console.error("Order Submission Error:", error);
       // If we already handled the error in the sub-try block, don't re-handle here if it was already thrown
@@ -267,7 +271,7 @@ export default function CheckoutPage() {
           <div className="bg-surface-container-high rounded-2xl p-6 space-y-6 text-left">
             <h2 className="font-headline font-bold border-b border-outline-variant/10 pb-3">주문 상품 정보</h2>
             <div className="space-y-4 max-h-60 overflow-y-auto pr-2">
-              {cart.map((item) => (
+              {orderedItems.map((item) => (
                 <div key={item.id} className="flex justify-between items-center text-sm">
                   <div className="flex items-center gap-3">
                     <img src={item.image} alt={item.name} className="w-12 h-12 rounded-lg object-cover" />
@@ -282,7 +286,7 @@ export default function CheckoutPage() {
             </div>
             <div className="pt-4 border-t border-outline-variant/10 flex justify-between items-center font-bold">
               <span>총 결제 금액</span>
-              <span className="text-xl text-primary">{totalPrice.toLocaleString()}원</span>
+              <span className="text-xl text-primary">{orderedTotalPrice.toLocaleString()}원</span>
             </div>
           </div>
 
