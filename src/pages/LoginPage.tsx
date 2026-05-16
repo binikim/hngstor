@@ -144,7 +144,7 @@ export default function LoginPage() {
       let message = '로그인 중 오류가 발생했습니다.';
       
       if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        message = '이메일 또는 비밀번호가 일치하지 않습니다.\n\n1. 가입한 적이 없다면 [회원가입]을 먼저 해주세요.\n2. Google로 가입하셨다면 Google 로그인을 이용해주세요.\n3. 비밀번호가 기억나지 않으면 [비밀번호 재설정]을 이용해주세요.';
+        message = '이메일 또는 비밀번호가 일치하지 않습니다.\n\n1. 가입한 적이 없다면 [회원가입]을 먼저 해주세요.\n2. 비밀번호가 기억나지 않으면 [비밀번호 재설정]을 이용해주세요.';
       } else if (error.code === 'auth/too-many-requests') {
         message = '너무 많은 로그인 시도가 있었습니다. 보안을 위해 잠시 차단되었으니 5분 후 다시 시도하거나 비밀번호를 재설정해 주세요.';
       } else if (error.code === 'auth/invalid-email') {
