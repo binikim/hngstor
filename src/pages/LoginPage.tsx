@@ -40,7 +40,7 @@ export default function LoginPage() {
             navigate('/admin');
           } else {
             // Preserve admin flag; redirect if on login pages
-            if (window.location.pathname === '/login' || window.location.pathname === '/admin/login') {
+            if (!import.meta.env.DEV && (window.location.pathname === '/login' || window.location.pathname === '/admin/login')) {
               navigate('/');
             }
           }

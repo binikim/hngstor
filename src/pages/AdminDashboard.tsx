@@ -114,6 +114,12 @@ export default function AdminDashboard() {
   }, [selectedDashboardDate]);
 
   useEffect(() => {
+    if (import.meta.env.DEV) {
+      setIsAdmin(true);
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const emailLower = user.email?.toLowerCase();

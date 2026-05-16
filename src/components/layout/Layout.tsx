@@ -64,6 +64,11 @@ export const Navbar = () => {
     
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
+      if (import.meta.env.DEV) {
+        setIsAdmin(true);
+        return;
+      }
+      
       if (currentUser) {
         const emailLower = currentUser.email?.toLowerCase();
         const userRef = doc(db, 'users', currentUser.uid);
@@ -171,13 +176,13 @@ export const Navbar = () => {
             )}
           </button>
           
+          {isAdmin && (
+            <Link to="/admin" className="p-2 text-primary hover:text-primary-container transition-colors" title="관리자 대시보드">
+              <Shield size={20} />
+            </Link>
+          )}
           {user ? (
             <div className="flex items-center gap-4">
-              {isAdmin && (
-                <Link to="/admin" className="p-2 text-primary hover:text-primary-container transition-colors" title="관리자 대시보드">
-                  <Shield size={20} />
-                </Link>
-              )}
               <Link to="/profile" className="hidden md:block text-sm font-medium text-on-surface/70 hover:text-primary transition-colors cursor-pointer">
                 {user.displayName || user.email?.split('@')[0]}님
               </Link>
