@@ -121,15 +121,9 @@ const CategoryCard = ({ category, isLoggedIn }: CategoryCardProps) => {
         <img 
           src={category.image} 
           alt={category.title} 
-          className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 ${!isLoggedIn ? 'blur-2xl grayscale opacity-20' : ''}`}
+          className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-110`}
           referrerPolicy="no-referrer"
         />
-        {!isLoggedIn && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 text-center p-4">
-            <Lock size={24} className="text-white/40 mb-2" />
-            <p className="text-white font-bold text-sm tracking-tighter">로그인 후 <br/>확인 가능</p>
-          </div>
-        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent group-hover:via-black/40 transition-all"></div>
         <div className="absolute bottom-8 left-8">
           <h3 className="text-2xl md:text-3xl font-headline font-bold text-white mb-2">{category.title}</h3>
@@ -160,15 +154,9 @@ const ProductCard = ({ product, isLoggedIn }: ProductCardProps) => {
         <img 
           src={product.image} 
           alt={product.name} 
-          className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 ${!isLoggedIn ? 'blur-3xl grayscale opacity-10' : ''}`}
+          className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110`}
           referrerPolicy="no-referrer"
         />
-        {!isLoggedIn && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 text-center">
-            <Lock size={32} className="text-white/20 mb-3" />
-            <p className="text-white font-bold text-base tracking-tight leading-tight">로그인 후<br/>이미지 확인 가능</p>
-          </div>
-        )}
         {product.badge && (
           <div className="absolute top-4 right-4">
             <span className="bg-tertiary-container text-on-tertiary-container px-3 py-1 rounded text-[10px] font-bold font-headline uppercase tracking-widest">

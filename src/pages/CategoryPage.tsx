@@ -112,15 +112,9 @@ export default function CategoryPage() {
           <img 
             src={data.image} 
             alt={data.title} 
-            className={`w-full h-full object-cover transition-opacity duration-500 ${!user ? 'blur-3xl opacity-10' : 'opacity-40'}`}
+            className={`w-full h-full object-cover transition-opacity duration-500 opacity-40`}
             referrerPolicy="no-referrer"
           />
-          {!user && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40">
-              <Lock className="text-white/20 mb-4" size={48} />
-              <p className="text-white font-bold text-xl">로그인 후 이미지를 확인할 수 있습니다.</p>
-            </div>
-          )}
           <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/60 to-background"></div>
         </div>
         <div className="relative z-10 max-w-[1920px] mx-auto px-6 md:px-12 w-full text-center">
@@ -148,12 +142,6 @@ export default function CategoryPage() {
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
             <div key={i} className="group">
               <div className="relative aspect-[3/4] bg-surface-container-low rounded-2xl overflow-hidden mb-6">
-                {!user ? (
-                   <div className="w-full h-full bg-surface-container-high flex flex-col items-center justify-center p-6 text-center">
-                      <Lock className="text-on-surface-variant/10 mb-4" size={40} />
-                      <p className="text-on-surface-variant/40 text-sm font-bold leading-tight">로그인 시<br/>상품 이미지가 노출됩니다.</p>
-                   </div>
-                ) : (
                   <>
                     <div className="w-full h-full bg-surface-container-high flex items-center justify-center text-on-surface-variant/20">
                       <span className="text-4xl font-headline font-bold">{i}</span>
@@ -172,7 +160,6 @@ export default function CategoryPage() {
                       </button>
                     </div>
                   </>
-                )}
               </div>
               <div className="space-y-2">
                 <p className="text-xs text-on-surface-variant font-medium tracking-wider uppercase">{data.title}</p>
