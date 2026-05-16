@@ -230,10 +230,9 @@ export default function CheckoutPage() {
         return; // Stop here if stock update fails
       }
 
-      setOrderedItems([...cart]);
-      setOrderedTotalPrice(totalPrice);
       clearCart();
-      setIsOrdered(true);
+      alert('주문이 완료되었습니다!');
+      navigate('/my-orders');
     } catch (error: any) {
       console.error("Order Submission Error:", error);
       // If we already handled the error in the sub-try block, don't re-handle here if it was already thrown
@@ -246,79 +245,6 @@ export default function CheckoutPage() {
       setIsSubmitting(false);
     }
   };
-
-  if (isOrdered) {
-    return (
-      <div className="min-h-screen pt-32 pb-20 px-6 flex flex-col items-center justify-center">
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="space-y-8 max-w-2xl w-full bg-surface-container-low p-8 md:p-12 rounded-3xl border border-outline-variant/10 shadow-2xl"
-        >
-          <div className="text-center space-y-4">
-            <div className="w-20 h-20 bg-success/10 text-success rounded-full flex items-center justify-center mx-auto">
-              <CheckCircle2 size={48} />
-            </div>
-            <h1 className="text-3xl font-headline font-bold">주문이 완료되었습니다!</h1>
-            <p className="text-on-surface-variant leading-relaxed">
-              핑크버튼를 이용해 주셔서 감사합니다. <br />
-              고객님의 프라이버시를 위해 송장에는 <br />
-              <span className="text-primary font-bold">'의류' 또는 '생활잡화'</span>로 기재되어 안전하게 배송됩니다.
-            </p>
-          </div>
-
-          {/* Order Summary in Success Page */}
-          <div className="bg-surface-container-high rounded-2xl p-6 space-y-6 text-left">
-            <h2 className="font-headline font-bold border-b border-outline-variant/10 pb-3">주문 상품 정보</h2>
-            <div className="space-y-4 max-h-60 overflow-y-auto pr-2">
-              {orderedItems.map((item) => (
-                <div key={item.id} className="flex justify-between items-center text-sm">
-                  <div className="flex items-center gap-3">
-                    <img src={item.image} alt={item.name} className="w-12 h-12 rounded-lg object-cover" />
-                    <div>
-                      <p className="font-bold">{item.name}</p>
-                      <p className="text-on-surface-variant/60 text-xs">수량: {item.quantity}개</p>
-                    </div>
-                  </div>
-                  <span className="font-bold">{(item.price * item.quantity).toLocaleString()}원</span>
-                </div>
-              ))}
-            </div>
-            <div className="pt-4 border-t border-outline-variant/10 flex justify-between items-center font-bold">
-              <span>총 결제 금액</span>
-              <span className="text-xl text-primary">{orderedTotalPrice.toLocaleString()}원</span>
-            </div>
-          </div>
-
-          {/* Shipping Info in Success Page */}
-          <div className="bg-surface-container-high rounded-2xl p-6 space-y-4 text-left">
-            <h2 className="font-headline font-bold border-b border-outline-variant/10 pb-3">배송 정보</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-on-surface-variant/60 mb-1">받으시는 분</p>
-                <p className="font-bold">{formData.recipientName}</p>
-              </div>
-              <div>
-                <p className="text-on-surface-variant/60 mb-1">연락처</p>
-                <p className="font-bold">{formData.recipientPhone}</p>
-              </div>
-              <div className="sm:col-span-2">
-                <p className="text-on-surface-variant/60 mb-1">배송지 주소</p>
-                <p className="font-bold">[{formData.zipCode}] {formData.address} {formData.detailAddress}</p>
-              </div>
-            </div>
-          </div>
-
-          <button 
-            onClick={() => navigate('/')}
-            className="w-full bg-primary text-on-primary py-4 rounded-xl font-bold hover:bg-primary-container transition-all"
-          >
-            홈으로 돌아가기
-          </button>
-        </motion.div>
-      </div>
-    );
-  }
 
   if (cart.length === 0) {
     return (
