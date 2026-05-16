@@ -178,10 +178,10 @@ export default function SignupPage() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!isPhoneVerified) {
-      alert('핸드폰을 통한 성인 인증이 필요합니다.');
-      return;
-    }
+    // if (!isPhoneVerified) {
+    //   alert('핸드폰을 통한 성인 인증이 필요합니다.');
+    //   return;
+    // }
 
     if (password !== confirmPassword) {
       alert('비밀번호가 일치하지 않습니다.');
@@ -315,6 +315,7 @@ export default function SignupPage() {
             </div>
           </div>
 
+          {/* [TEST] 휴대폰 인증 기능 임시 주석 처리 (나중에 다시 활성화)
           <div className="space-y-4 pt-4 border-t border-outline-variant/10">
             <div className="flex items-center gap-2 mb-2">
               <ShieldCheck className="text-primary" size={18} />
@@ -351,7 +352,7 @@ export default function SignupPage() {
                   className="flex gap-2"
                 >
                   <div className="relative flex-grow">
-                    <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40" size={18} />
+                     <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40" size={18} />
                     <input 
                       type="text" 
                       value={verificationCode}
@@ -391,6 +392,7 @@ export default function SignupPage() {
           </div>
 
           <div id="recaptcha-container" className="hidden"></div>
+          */}
 
           <button 
             type="submit"

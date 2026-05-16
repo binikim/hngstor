@@ -120,18 +120,7 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setLoading(true);
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      await handleLoginSuccess(result.user);
-    } catch (error) {
-      console.error("Login Error:", error);
-      alert('로그인 중 오류가 발생했습니다.');
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -200,26 +189,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="space-y-4 mb-8">
-          {!isAdminPath && (
-            <>
-              <button 
-                onClick={handleGoogleLogin}
-                disabled={loading}
-                className="w-full bg-surface-container-high text-on-surface py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-surface-container-highest transition-all transform active:scale-95 disabled:opacity-50"
-              >
-                <div className="flex items-center gap-3">
-                  <Chrome size={20} /> Google로 로그인
-                </div>
-              </button>
-              
-              <div className="flex items-center gap-4 text-on-surface-variant/20">
-                <div className="h-[1px] flex-grow bg-current"></div>
-                <span className="text-xs font-bold uppercase tracking-widest">OR</span>
-                <div className="h-[1px] flex-grow bg-current"></div>
-              </div>
-            </>
-          )}
+        <div className="mb-8">
         </div>
 
         <form onSubmit={handleEmailLogin} className="space-y-6">
