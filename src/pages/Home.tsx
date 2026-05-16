@@ -45,7 +45,7 @@ const Hero = ({ content }: { content?: any }) => {
     <section className="relative h-[80vh] min-h-[600px] flex items-center overflow-hidden">
       <div className="absolute inset-0 z-0">
         <img 
-          src={content?.heroImage || "https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=1920"} 
+          src={(content?.heroImage && !content.heroImage.includes('logo.png')) ? content.heroImage : "https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=1920"} 
           alt="Hero" 
           className="w-full h-full object-cover opacity-40"
           referrerPolicy="no-referrer"
@@ -350,7 +350,7 @@ export default function Home() {
       <section className="relative py-32 overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
-            src={homeContent?.philosophyImage || "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=1920"} 
+            src={(homeContent?.philosophyImage && !homeContent.philosophyImage.includes('logo.png')) ? homeContent.philosophyImage : "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=1920"} 
             alt="Philosophy" 
             className="w-full h-full object-cover opacity-20 grayscale"
             referrerPolicy="no-referrer"
