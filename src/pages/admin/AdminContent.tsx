@@ -107,7 +107,7 @@ export default function AdminContent() {
               logoText: '핑크버튼',
               copyrightText: '© 2024 핑크버튼. 본 사이트는 만 19세 미만의 청소년의 출입을 금합니다. 성인 인증 후 모든 콘텐츠 이용이 가능합니다.',
               businessNumber: '000-00-00000',
-              ceo: 'H&G 팀',
+              ceo: '핑크버튼 팀',
               phone: '00-000-0000',
               address: '서울특별시',
               extraFields: [],
@@ -161,7 +161,7 @@ export default function AdminContent() {
             logoText: '핑크버튼',
             copyrightText: '© 2024 핑크버튼. 본 사이트는 만 19세 미만의 청소년의 출입을 금합니다. 성인 인증 후 모든 콘텐츠 이용이 가능합니다.',
             businessNumber: '000-00-00000',
-            ceo: 'H&G 팀',
+            ceo: '핑크버튼 팀',
             phone: '00-000-0000',
             address: '서울특별시',
             extraFields: []

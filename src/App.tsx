@@ -21,6 +21,7 @@ import FAQPage from './pages/info/FAQPage';
 import InquiryPage from './pages/info/InquiryPage';
 import TrackingPage from './pages/info/TrackingPage';
 import ProfilePage from './pages/ProfilePage';
+import MigrationAdmin from './pages/MigrationAdmin';
 import { Navbar, Footer } from './components/layout/Layout';
 import { CartProvider } from './context/CartContext';
 
@@ -60,6 +61,7 @@ export default function App() {
               <Route path="/faq" element={<FAQPage />} />
               <Route path="/inquiry" element={<InquiryPage />} />
               <Route path="/tracking" element={<TrackingPage />} />
+              <Route path="/migrate" element={<MigrationAdmin />} />
             </Routes>
           </main>
           <Footer />

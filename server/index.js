@@ -76,8 +76,8 @@ app.get('/api/products/:id', (req, res) => {
 });
 
 app.post('/api/products', (req, res) => {
-  const { name, category, price, stock, image, description, badge, createdAt } = req.body;
-  const id = crypto.randomUUID();
+  const { id: reqId, name, category, price, stock, image, description, badge, createdAt } = req.body;
+  const id = reqId || crypto.randomUUID();
   const sql = `INSERT INTO products (id, name, category, price, stock, image, description, badge, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
   db.run(sql, [id, name, category, price, stock || 0, image, description, badge, createdAt || new Date().toISOString()], function(err) {
     if (err) return res.status(500).json({ error: err.message });
@@ -137,8 +137,8 @@ app.get('/api/orders/user/:userId', (req, res) => {
 });
 
 app.post('/api/orders', (req, res) => {
-  const { userId, userEmail, items, totalPrice, totalItems, shippingInfo, paymentMethod, status, createdAt } = req.body;
-  const id = crypto.randomUUID();
+  const { id: reqId, userId, userEmail, items, totalPrice, totalItems, shippingInfo, paymentMethod, status, createdAt } = req.body;
+  const id = reqId || crypto.randomUUID();
   const sql = `INSERT INTO orders (id, userId, userEmail, items, totalPrice, totalItems, shippingInfo, paymentMethod, status, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
   
   db.run(sql, [
