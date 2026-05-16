@@ -53,6 +53,12 @@ export default function AdminDashboard() {
     totalUsers: 0
   });
 
+  const getLocalDateString = (date: Date) => {
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+  };
+  const todayDateString = getLocalDateString(new Date());
+  const [selectedDashboardDate, setSelectedDashboardDate] = useState<string>(todayDateString);
+
   useEffect(() => {
     // 1. Listen to Products count
     const unsubscribeProducts = onSnapshot(collection(db, 'products'), (snapshot) => {
@@ -64,14 +70,27 @@ export default function AdminDashboard() {
       setStats(prev => ({ ...prev, totalUsers: snapshot.size }));
     });
 
-    // 3. Listen to Orders for today's revenue and new orders
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayTimestamp = Timestamp.fromDate(today);
+    return () => {
+      unsubscribeProducts();
+      unsubscribeUsers();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!selectedDashboardDate) return;
+
+    const dateObj = new Date(selectedDashboardDate);
+    dateObj.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(dateObj);
+    endOfDay.setDate(endOfDay.getDate() + 1);
+
+    const startTimestamp = Timestamp.fromDate(dateObj);
+    const endTimestamp = Timestamp.fromDate(endOfDay);
 
     const qOrders = query(
       collection(db, 'orders'),
-      where('createdAt', '>=', todayTimestamp)
+      where('createdAt', '>=', startTimestamp),
+      where('createdAt', '<', endTimestamp)
     );
 
     const unsubscribeOrders = onSnapshot(qOrders, (snapshot) => {
@@ -90,11 +109,9 @@ export default function AdminDashboard() {
     });
 
     return () => {
-      unsubscribeProducts();
-      unsubscribeUsers();
       unsubscribeOrders();
     };
-  }, []);
+  }, [selectedDashboardDate]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -148,17 +165,29 @@ export default function AdminDashboard() {
       default: return (
         <>
           {/* Stats Grid */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <h3 className="text-xl font-headline font-bold">운영 현황</h3>
+            <div className="flex items-center gap-2 bg-surface-container-low px-4 py-2 rounded-xl border border-outline-variant/10">
+              <CalendarIcon size={16} className="text-on-surface-variant/50" />
+              <input 
+                type="date" 
+                value={selectedDashboardDate}
+                onChange={(e) => setSelectedDashboardDate(e.target.value)}
+                className="bg-transparent border-none text-sm font-medium focus:ring-0 cursor-pointer outline-none"
+              />
+            </div>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             {[
               { 
-                label: '오늘의 매출', 
+                label: selectedDashboardDate === todayDateString ? '오늘의 매출' : '선택일 매출', 
                 value: `${stats.todayRevenue.toLocaleString()} KRW`, 
                 icon: TrendingUp, 
                 color: 'text-primary',
                 onClick: () => setActiveTab('orders')
               },
               { 
-                label: '신규 주문 (오늘)', 
+                label: selectedDashboardDate === todayDateString ? '신규 주문 (오늘)' : '선택일 주문', 
                 value: `${stats.newOrders}건`, 
                 icon: ShoppingBag, 
                 color: 'text-tertiary',

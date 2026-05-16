@@ -27,6 +27,8 @@ export default function AdminProducts() {
   const [editingStockId, setEditingStockId] = useState<string | null>(null);
   const [tempStock, setTempStock] = useState<number>(0);
   const [editLoading, setEditLoading] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>('전체');
+  const [isEditCustomCategory, setIsEditCustomCategory] = useState(false);
 
   useEffect(() => {
     const q = query(collection(db, 'products'), orderBy('createdAt', 'desc'));
@@ -97,15 +99,35 @@ export default function AdminProducts() {
     reader.readAsDataURL(file);
   };
 
+  const categories = ['전체', ...Array.from(new Set(products.map(p => p.category)))];
+  const uniqueEditCategories = Array.from(new Set([...products.map(p => p.category), '남성 성인용품', '여성 성인용품', '콘돔', '러브젤', '기타 성인용품', '섹시속옷']));
+  const filteredProducts = selectedCategory === '전체' ? products : products.filter(p => p.category === selectedCategory);
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <h2 className="text-2xl font-headline font-bold flex items-center gap-2">
-          <Package size={24} /> 제품 관리
-        </h2>
+        <div className="flex flex-col md:flex-row md:items-center gap-6">
+          <h2 className="text-2xl font-headline font-bold flex items-center gap-2 shrink-0">
+            <Package size={24} /> 제품 관리
+          </h2>
+          
+          <div className="flex items-center gap-2 bg-surface-container-low px-4 py-2 rounded-xl border border-outline-variant/10">
+            <Search size={16} className="text-on-surface-variant/50" />
+            <select 
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="bg-transparent border-none text-sm font-medium focus:ring-0 cursor-pointer outline-none w-40"
+            >
+              {categories.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         <button 
           onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-primary text-on-primary rounded-xl font-bold hover:bg-primary-container transition-all"
+          className="flex items-center gap-2 px-6 py-3 bg-primary text-on-primary rounded-xl font-bold hover:bg-primary-container transition-all whitespace-nowrap shrink-0"
         >
           <Plus size={20} /> 새 제품 등록
         </button>
@@ -126,7 +148,7 @@ export default function AdminProducts() {
               </tr>
             </thead>
             <tbody className="text-sm">
-              {products.map((product) => (
+              {filteredProducts.map((product) => (
                 <tr key={product.id} className="border-b border-outline-variant/5 hover:bg-surface-container-high/50 transition-colors">
                   <td className="px-6 py-4">
                     <img src={product.image} alt={product.name} className="w-12 h-12 rounded-lg object-cover" />
@@ -173,6 +195,7 @@ export default function AdminProducts() {
                       <button 
                         onClick={() => {
                           setEditingProduct(product);
+                          setIsEditCustomCategory(false);
                           setShowEditModal(true);
                         }}
                         className="p-2 text-on-surface-variant hover:text-primary transition-colors"
@@ -241,17 +264,33 @@ export default function AdminProducts() {
               <div className="space-y-2">
                 <label className="text-sm font-medium text-on-surface-variant">카테고리</label>
                 <select 
-                  value={editingProduct.category}
-                  onChange={e => setEditingProduct({...editingProduct, category: e.target.value})}
+                  value={isEditCustomCategory ? 'custom' : editingProduct.category}
+                  onChange={e => {
+                    if (e.target.value === 'custom') {
+                      setIsEditCustomCategory(true);
+                      setEditingProduct({...editingProduct, category: ''});
+                    } else {
+                      setIsEditCustomCategory(false);
+                      setEditingProduct({...editingProduct, category: e.target.value});
+                    }
+                  }}
                   className="w-full bg-surface-container-lowest border-none rounded-xl py-3 px-4 focus:ring-1 focus:ring-primary"
                 >
-                  <option>남성 성인용품</option>
-                  <option>여성 성인용품</option>
-                  <option>콘돔</option>
-                  <option>러브젤</option>
-                  <option>기타 성인용품</option>
-                  <option>섹시속옷</option>
+                  {uniqueEditCategories.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                  <option value="custom">+ 직접 입력 (새 카테고리 추가)</option>
                 </select>
+                {isEditCustomCategory && (
+                  <input 
+                    type="text" required
+                    value={editingProduct.category}
+                    onChange={e => setEditingProduct({...editingProduct, category: e.target.value})}
+                    placeholder="새로운 카테고리명을 입력하세요"
+                    className="w-full bg-surface-container-lowest border-none rounded-xl py-3 px-4 focus:ring-1 focus:ring-primary mt-2"
+                    autoFocus
+                  />
+                )}
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-on-surface-variant">이미지 수정</label>

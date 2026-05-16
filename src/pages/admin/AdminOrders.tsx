@@ -58,6 +58,7 @@ export default function AdminOrders() {
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [successId, setSuccessId] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>('');
 
   useEffect(() => {
     const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
@@ -99,22 +100,52 @@ export default function AdminOrders() {
     }
   };
 
+  const filteredOrders = selectedDate 
+    ? orders.filter(order => {
+        if (!order.createdAt) return false;
+        const orderDate = order.createdAt.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
+        const localDate = new Date(orderDate.getTime() - orderDate.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+        return localDate === selectedDate;
+      })
+    : orders;
+
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-headline font-bold flex items-center gap-2">
-          <ShoppingBag size={24} /> 주문 관리
-        </h2>
-        <div className="text-sm text-on-surface-variant">총 {orders.length}건의 주문이 있습니다.</div>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-center gap-6">
+          <h2 className="text-2xl font-headline font-bold flex items-center gap-2">
+            <ShoppingBag size={24} /> 주문 관리
+          </h2>
+          <div className="flex items-center gap-2 bg-surface-container-low px-4 py-2 rounded-xl border border-outline-variant/10">
+            <Clock size={16} className="text-on-surface-variant/50" />
+            <input 
+              type="date" 
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="bg-transparent border-none text-sm font-medium focus:ring-0 cursor-pointer outline-none"
+            />
+            {selectedDate && (
+              <button 
+                onClick={() => setSelectedDate('')}
+                className="text-xs text-primary hover:underline ml-2"
+              >
+                전체 보기
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="text-sm text-on-surface-variant shrink-0">
+          총 {filteredOrders.length}건의 주문이 있습니다.
+        </div>
       </div>
 
       <div className="space-y-4">
-        {orders.length === 0 ? (
+        {filteredOrders.length === 0 ? (
           <div className="bg-surface-container-low rounded-2xl p-12 text-center text-on-surface-variant border border-outline-variant/10">
-            주문 내역이 없습니다.
+            {selectedDate ? '선택하신 날짜에 주문 내역이 없습니다.' : '주문 내역이 없습니다.'}
           </div>
         ) : (
-          orders.map((order) => (
+          filteredOrders.map((order) => (
             <div key={order.id} className="bg-surface-container-low rounded-2xl border border-outline-variant/10 overflow-hidden shadow-sm">
               {/* Order Summary Header */}
               <div 

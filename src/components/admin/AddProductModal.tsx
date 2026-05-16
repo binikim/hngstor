@@ -16,6 +16,7 @@ interface AddProductModalProps {
 
 export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProductModalProps) {
   const [loading, setLoading] = useState(false);
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
   const [newProduct, setNewProduct] = useState({
     name: '',
     category: '여성 성인용품',
@@ -57,6 +58,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         stock: 0,
         image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=800'
       });
+      setIsCustomCategory(false);
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, 'products');
     } finally {
@@ -112,17 +114,36 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
           <div className="space-y-2">
             <label className="text-sm font-medium text-on-surface-variant">카테고리</label>
             <select 
-              value={newProduct.category}
-              onChange={e => setNewProduct({...newProduct, category: e.target.value})}
+              value={isCustomCategory ? 'custom' : newProduct.category}
+              onChange={e => {
+                if (e.target.value === 'custom') {
+                  setIsCustomCategory(true);
+                  setNewProduct({...newProduct, category: ''});
+                } else {
+                  setIsCustomCategory(false);
+                  setNewProduct({...newProduct, category: e.target.value});
+                }
+              }}
               className="w-full bg-surface-container-lowest border-none rounded-xl py-3 px-4 focus:ring-1 focus:ring-primary"
             >
-              <option>남성 성인용품</option>
-              <option>여성 성인용품</option>
-              <option>콘돔</option>
-              <option>러브젤</option>
-              <option>기타 성인용품</option>
-              <option>섹시속옷</option>
+              <option value="남성 성인용품">남성 성인용품</option>
+              <option value="여성 성인용품">여성 성인용품</option>
+              <option value="콘돔">콘돔</option>
+              <option value="러브젤">러브젤</option>
+              <option value="기타 성인용품">기타 성인용품</option>
+              <option value="섹시속옷">섹시속옷</option>
+              <option value="custom">+ 직접 입력 (새 카테고리 추가)</option>
             </select>
+            {isCustomCategory && (
+              <input 
+                type="text" required
+                value={newProduct.category}
+                onChange={e => setNewProduct({...newProduct, category: e.target.value})}
+                placeholder="새로운 카테고리명을 입력하세요"
+                className="w-full bg-surface-container-lowest border-none rounded-xl py-3 px-4 focus:ring-1 focus:ring-primary mt-2"
+                autoFocus
+              />
+            )}
           </div>
 
           <div className="space-y-2">
