@@ -35,10 +35,9 @@ const NAV_LINKS = [
 export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const { totalItems, clearCart } = useCart();
+  const { totalItems, clearCart, isCartOpen, setIsCartOpen } = useCart();
   const location = useLocation();
   const navigate = useNavigate();
 

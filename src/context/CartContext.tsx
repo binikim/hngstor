@@ -21,6 +21,8 @@ interface CartContextType {
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
+  isCartOpen: boolean;
+  setIsCartOpen: (isOpen: boolean) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -30,6 +32,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const savedCart = localStorage.getItem('cart');
     return savedCart ? JSON.parse(savedCart) : [];
   });
+  
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cart));
@@ -45,6 +49,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       return [...prevCart, { ...product, quantity: 1 }];
     });
+    alert('상품이 장바구니에 담겼습니다.');
+    setIsCartOpen(true);
   };
 
   const removeFromCart = (productId: string) => {
@@ -78,7 +84,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       updateQuantity, 
       clearCart, 
       totalItems, 
-      totalPrice 
+      totalPrice,
+      isCartOpen,
+      setIsCartOpen
     }}>
       {children}
     </CartContext.Provider>
