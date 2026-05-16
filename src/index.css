@@ -6,37 +6,49 @@
   --font-headline: "Space Grotesk", sans-serif;
   --font-serif: "Cormorant Garamond", serif;
 
-  --color-background: #131313;
-  --color-primary: #dab9ff;
-  --color-primary-container: #bb86fc;
-  --color-on-primary: #460283;
-  --color-on-primary-container: #4c0f89;
-  --color-surface: #131313;
-  --color-on-surface: #e5e2e1;
-  --color-on-surface-variant: #cdc3d4;
-  --color-outline-variant: #4b4452;
-  --color-surface-container-low: #1c1b1b;
-  --color-surface-container-high: #2a2a2a;
-  --color-surface-container-highest: #353534;
-  --color-tertiary: #d4ca38;
-  --color-tertiary-container: #aba200;
-  --color-on-tertiary-container: #3b3700;
+  /* Gorgeous Bright Pink Palette */
+  --color-background: transparent;
+  --color-primary: #e11d48; /* rose-600 */
+  --color-primary-container: #fecdd3; /* rose-200 */
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #881337; /* rose-900 */
+  --color-surface: rgba(255, 255, 255, 0.7); /* glassmorphism */
+  --color-on-surface: #4c0519; /* dark pink text */
+  --color-on-surface-variant: #881337; 
+  --color-outline-variant: #fbcfe8; 
+  --color-surface-container-low: rgba(255, 255, 255, 0.5);
+  --color-surface-container-high: rgba(255, 255, 255, 0.8);
+  --color-surface-container-highest: rgba(255, 255, 255, 0.95);
+  --color-tertiary: #c026d3; /* fuchsia-600 */
+  --color-tertiary-container: #f5d0fe; /* fuchsia-200 */
+  --color-on-tertiary-container: #701a75; /* fuchsia-900 */
   
-  --color-success: #4ade80;
-  --color-error: #f87171;
-  --color-warning: #fbbf24;
-  --color-info: #60a5fa;
-  --color-secondary: #94a3b8;
+  --color-success: #10b981;
+  --color-error: #ef4444;
+  --color-warning: #f59e0b;
+  --color-info: #3b82f6;
+  --color-secondary: #f43f5e;
 }
 
 @layer base {
   body {
-    @apply bg-background text-on-surface font-sans antialiased;
+    @apply text-on-surface font-sans antialiased;
+    /* Animated Pink Gradient */
+    background: linear-gradient(120deg, #ff9a9e 0%, #fecfef 50%, #fbc2eb 100%);
+    background-size: 200% 200%;
+    animation: gradientBG 10s ease infinite;
+    min-height: 100vh;
   }
 }
 
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 .glass {
-  @apply bg-surface/80 backdrop-blur-xl;
+  @apply bg-surface backdrop-blur-xl border border-white/40 shadow-xl;
 }
 
 .scrollbar-hide::-webkit-scrollbar {
@@ -77,6 +89,6 @@
 }
 
 .markdown-body blockquote {
-  @apply pl-4 border-l-4 border-primary/20 italic text-on-surface-variant/80 my-4;
+  @apply pl-4 border-l-4 border-primary/40 italic text-on-surface-variant/90 my-4;
 }
 
