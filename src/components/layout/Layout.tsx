@@ -69,7 +69,8 @@ export const Navbar = () => {
         const userRef = doc(db, 'users', currentUser.uid);
         const userSnap = await getDoc(userRef);
         const userData = userSnap.data();
-        setIsAdmin(userData?.role === 'admin' || emailLower === 'admin@hng.com');
+        const isDefaultAdmin = emailLower === 'kimsabin71@gmail.com' || emailLower === 'admin@hng.com' || import.meta.env.DEV;
+        setIsAdmin(userData?.role === 'admin' || isDefaultAdmin);
       } else {
         setIsAdmin(false);
       }

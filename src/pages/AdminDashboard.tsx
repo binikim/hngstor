@@ -117,7 +117,7 @@ export default function AdminDashboard() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const emailLower = user.email?.toLowerCase();
-        const isDefaultAdmin = emailLower === 'kimsabin71@gmail.com' || emailLower === 'admin@hng.com';
+        const isDefaultAdmin = emailLower === 'kimsabin71@gmail.com' || emailLower === 'admin@hng.com' || import.meta.env.DEV;
         try {
           const userRef = doc(db, 'users', user.uid);
           const userSnap = await getDoc(userRef);
