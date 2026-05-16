@@ -49,14 +49,30 @@ export default function CheckoutPage() {
     paymentMethod: 'card'
   });
 
+  const [isSameAsOrderer, setIsSameAsOrderer] = useState(false);
+
   // Auto-fill orderer info when auth state changes
   React.useEffect(() => {
-    if (auth.currentUser) {
-      setFormData(prev => ({
-        ...prev,
-        ordererName: prev.ordererName || auth.currentUser?.displayName || ''
-      }));
+    async function fetchUserInfo() {
+      if (auth.currentUser) {
+        let phone = '';
+        try {
+          const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+          if (userDoc.exists() && userDoc.data().phoneNumber) {
+            phone = userDoc.data().phoneNumber;
+          }
+        } catch (e) {
+          console.error("Error fetching user phone", e);
+        }
+        
+        setFormData(prev => ({
+          ...prev,
+          ordererName: prev.ordererName || auth.currentUser?.displayName || '',
+          ordererPhone: prev.ordererPhone || phone || ''
+        }));
+      }
     }
+    fetchUserInfo();
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -77,9 +93,39 @@ export default function CheckoutPage() {
         formattedPhone = `${phoneValue.slice(0, 3)}-${phoneValue.slice(3, 7)}-${phoneValue.slice(7, 11)}`;
       }
       
-      setFormData(prev => ({ ...prev, [name]: formattedPhone }));
+      setFormData(prev => {
+        const next = { ...prev, [name]: formattedPhone };
+        if (isSameAsOrderer && name === 'ordererPhone') {
+          next.recipientPhone = formattedPhone;
+        }
+        return next;
+      });
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      setFormData(prev => {
+        const next = { ...prev, [name]: value };
+        if (isSameAsOrderer && name === 'ordererName') {
+          next.recipientName = value;
+        }
+        return next;
+      });
+    }
+  };
+
+  const handleSameAsOrdererChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked;
+    setIsSameAsOrderer(checked);
+    if (checked) {
+      setFormData(prev => ({
+        ...prev,
+        recipientName: prev.ordererName,
+        recipientPhone: prev.ordererPhone
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        recipientName: '',
+        recipientPhone: ''
+      }));
     }
   };
 
@@ -362,9 +408,20 @@ export default function CheckoutPage() {
 
             {/* Shipping Info */}
             <section className="space-y-6">
-              <div className="flex items-center gap-3 border-b border-outline-variant/10 pb-4">
-                <Truck className="text-primary" size={20} />
-                <h2 className="text-xl font-headline font-bold">배송지 정보</h2>
+              <div className="flex items-center justify-between border-b border-outline-variant/10 pb-4">
+                <div className="flex items-center gap-3">
+                  <Truck className="text-primary" size={20} />
+                  <h2 className="text-xl font-headline font-bold">배송지 정보</h2>
+                </div>
+                <label className="flex items-center gap-2 text-sm text-on-surface-variant cursor-pointer hover:text-primary transition-colors font-medium">
+                  <input 
+                    type="checkbox" 
+                    checked={isSameAsOrderer}
+                    onChange={handleSameAsOrdererChange}
+                    className="w-4 h-4 rounded border-outline-variant/20 text-primary focus:ring-primary cursor-pointer"
+                  />
+                  주문자 정보와 동일
+                </label>
               </div>
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
