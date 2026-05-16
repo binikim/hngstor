@@ -17,7 +17,7 @@ export default function MigrationAdmin() {
       const usersSnap = await getDocs(collection(db, 'users'));
       for (const userDoc of usersSnap.docs) {
         const data = userDoc.data();
-        await fetch('http://localhost:3001/api/users', {
+        await fetch(`http://${window.location.hostname}:3001/api/users`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ uid: userDoc.id, ...data, createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString() })
@@ -30,7 +30,7 @@ export default function MigrationAdmin() {
       const productsSnap = await getDocs(collection(db, 'products'));
       for (const prodDoc of productsSnap.docs) {
         const data = prodDoc.data();
-        await fetch(`http://localhost:3001/api/products`, {
+        await fetch(`http://${window.location.hostname}:3001/api/products`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: prodDoc.id, ...data, createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString() })
@@ -43,7 +43,7 @@ export default function MigrationAdmin() {
       const ordersSnap = await getDocs(collection(db, 'orders'));
       for (const ordDoc of ordersSnap.docs) {
         const data = ordDoc.data();
-        await fetch(`http://localhost:3001/api/orders`, {
+        await fetch(`http://${window.location.hostname}:3001/api/orders`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: ordDoc.id, ...data, createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString() })
@@ -57,7 +57,7 @@ export default function MigrationAdmin() {
       for (const cid of contents) {
         const cSnap = await getDoc(doc(db, 'siteContent', cid));
         if (cSnap.exists()) {
-          await fetch(`http://localhost:3001/api/content/${cid}`, {
+          await fetch(`http://${window.location.hostname}:3001/api/content/${cid}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ content: cSnap.data().content })
