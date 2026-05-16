@@ -137,12 +137,9 @@ export const Navbar = () => {
   return (
     <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${isScrolled || location.pathname !== '/' ? 'glass py-4 shadow-xl' : 'bg-transparent py-6'}`}>
       <div className="max-w-[1920px] mx-auto px-6 md:px-12 flex justify-between items-center">
-        <Link to="/" className="text-2xl font-headline font-extrabold tracking-tighter text-primary flex items-center">
-          {footerInfo?.logoImage ? (
-            <img src={footerInfo.logoImage} alt="핑크버튼" className="h-10 md:h-14 object-contain" />
-          ) : (
-            (footerInfo?.logoText || '핑크버튼').replace(/H&G스토아/g, '핑크버튼')
-          )}
+        <Link to="/" className="text-2xl font-black font-headline tracking-tighter text-primary flex items-center gap-2 relative z-10 group">
+          <img src="/logo.png" alt="핑크버튼 로고" className="w-8 h-8 rounded-full object-cover group-hover:scale-110 transition-transform" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+          핑크버튼
         </Link>
 
         <div className="hidden lg:flex items-center gap-8">

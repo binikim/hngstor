@@ -164,4 +164,7 @@ export class Timestamp {
   static now() {
     return new Timestamp(Math.floor(Date.now() / 1000), 0);
   }
+  static fromDate(date: Date) {
+    return new Timestamp(Math.floor(date.getTime() / 1000), 0);
+  }
 }
