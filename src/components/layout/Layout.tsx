@@ -135,7 +135,7 @@ export const Navbar = () => {
           {footerInfo?.logoImage ? (
             <img src={footerInfo.logoImage} alt="핑크버튼" className="h-10 md:h-14 object-contain" />
           ) : (
-            footerInfo?.logoText || '핑크버튼'
+            (footerInfo?.logoText || '핑크버튼').replace(/H&G스토아/g, '핑크버튼')
           )}
         </Link>
 
@@ -256,12 +256,12 @@ export const Footer = () => {
               {footerInfo?.logoImage ? (
                 <img src={footerInfo.logoImage} alt="핑크버튼" className="h-12 md:h-16 object-contain" />
               ) : (
-                footerInfo?.logoText || '핑크버튼'
+                (footerInfo?.logoText || '핑크버튼').replace(/H&G스토아/g, '핑크버튼')
               )}
             </Link>
             <p 
               className="text-on-surface-variant text-sm leading-relaxed max-w-xs"
-              dangerouslySetInnerHTML={{ __html: footerInfo?.copyrightText || '© 2024 핑크버튼. 본 사이트는 만 19세 미만의 청소년의 출입을 금합니다. 성인 인증 후 모든 콘텐츠 이용이 가능합니다.' }}
+              dangerouslySetInnerHTML={{ __html: (footerInfo?.copyrightText || '© 2024 핑크버튼. 본 사이트는 만 19세 미만의 청소년의 출입을 금합니다. 성인 인증 후 모든 콘텐츠 이용이 가능합니다.').replace(/H&G스토아/g, '핑크버튼') }}
             />
           </div>
 
@@ -288,10 +288,10 @@ export const Footer = () => {
         <div className="pt-8 border-t border-outline-variant/10 text-center">
           <p className="text-[10px] text-on-surface-variant uppercase tracking-[0.2em] leading-relaxed">
             {Array.isArray(footerInfo) 
-              ? footerInfo.filter(item => item.label || item.value).map(item => `${item.label}: ${item.value}`).join(' | ')
+              ? footerInfo.filter(item => item.label || item.value).map(item => `${item.label}: ${String(item.value).replace(/H&G스토아|H&G/g, '핑크버튼')}`).join(' | ')
               : <>
-                  사업자등록번호: {footerInfo?.businessNumber || '000-00-00000'} | 대표: {footerInfo?.ceo || '핑크버튼 팀'} | 전화: {footerInfo?.phone || '00-000-0000'} | 주소: {footerInfo?.address || '서울특별시'}
-                  {footerInfo?.extraFields?.length > 0 && ' | ' + footerInfo.extraFields.filter((item: any) => item.label || item.value).map((item: any) => `${item.label}: ${item.value}`).join(' | ')}
+                  사업자등록번호: {footerInfo?.businessNumber || '000-00-00000'} | 대표: {(footerInfo?.ceo || '핑크버튼 팀').replace(/H&G스토아|H&G/g, '핑크버튼')} | 전화: {footerInfo?.phone || '00-000-0000'} | 주소: {footerInfo?.address || '서울특별시'}
+                  {footerInfo?.extraFields?.length > 0 && ' | ' + footerInfo.extraFields.filter((item: any) => item.label || item.value).map((item: any) => `${item.label}: ${String(item.value).replace(/H&G스토아|H&G/g, '핑크버튼')}`).join(' | ')}
                 </>
             }
           </p>
