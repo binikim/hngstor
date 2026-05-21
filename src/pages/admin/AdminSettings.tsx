@@ -48,7 +48,7 @@ export default function AdminSettings() {
       const worksheet = XLSX.utils.json_to_sheet(productsData);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Products');
-      XLSX.writeFile(workbook, '제품명.xlsx');
+      XLSX.writeFile(workbook, '제품정보.xlsx');
     } catch (error) {
       console.error('Products Excel Download Error:', error);
       alert('제품 데이터를 엑셀로 저장하는 동안 오류가 발생했습니다.');
