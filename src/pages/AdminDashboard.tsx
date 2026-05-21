@@ -38,6 +38,35 @@ import AdminSettings from './admin/AdminSettings';
 import AdminContent from './admin/AdminContent';
 import AddProductModal from '../components/admin/AddProductModal';
 
+interface OrderItem {
+  id: string;
+  name: string;
+  price: number;
+  image: string;
+  quantity: number;
+}
+
+interface Order {
+  id: string;
+  userId: string;
+  userEmail: string;
+  totalPrice?: number;
+  totalAmount?: number;
+  status: string;
+  createdAt: any;
+  items: OrderItem[];
+  shippingInfo: {
+    recipientName: string;
+    recipientPhone: string;
+    address: string;
+    detailAddress: string;
+    zipCode: string;
+    deliveryNote?: string;
+  };
+  trackingNumber?: string;
+  deliveryCompany?: string;
+}
+
 type AdminTab = 'dashboard' | 'products' | 'orders' | 'users' | 'settings' | 'content';
 
 export default function AdminDashboard() {
@@ -46,12 +75,10 @@ export default function AdminDashboard() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
   const [isAddingProduct, setIsAddingProduct] = useState(false);
-  const [stats, setStats] = useState({
-    todayRevenue: 0,
-    newOrders: 0,
-    totalProducts: 0,
-    totalUsers: 0
-  });
+  
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [totalUsers, setTotalUsers] = useState(0);
 
   const getLocalDateString = (date: Date) => {
     return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().split('T')[0];
@@ -59,59 +86,91 @@ export default function AdminDashboard() {
   const todayDateString = getLocalDateString(new Date());
   const [selectedDashboardDate, setSelectedDashboardDate] = useState<string>(todayDateString);
 
+  // Calendar Year/Month State
+  const [calendarDate, setCalendarDate] = useState(new Date());
+
+  // Subscribe to all orders
   useEffect(() => {
-    // 1. Listen to Products count
-    const unsubscribeProducts = onSnapshot(collection(db, 'products'), (snapshot) => {
-      setStats(prev => ({ ...prev, totalProducts: snapshot.size }));
+    const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Order[];
+      setOrders(data);
+    }, (error) => {
+      console.error("Error fetching orders:", error);
     });
-
-    // 2. Listen to Users count
-    const unsubscribeUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
-      setStats(prev => ({ ...prev, totalUsers: snapshot.size }));
-    });
-
-    return () => {
-      unsubscribeProducts();
-      unsubscribeUsers();
-    };
+    return () => unsubscribe();
   }, []);
 
+  // Subscribe to products count
   useEffect(() => {
-    if (!selectedDashboardDate) return;
+    const unsubscribeProducts = onSnapshot(collection(db, 'products'), (snapshot) => {
+      setTotalProducts(snapshot.size);
+    });
+    return () => unsubscribeProducts();
+  }, []);
 
-    const dateObj = new Date(selectedDashboardDate);
-    dateObj.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(dateObj);
-    endOfDay.setDate(endOfDay.getDate() + 1);
+  // Subscribe to users count
+  useEffect(() => {
+    const unsubscribeUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
+      setTotalUsers(snapshot.size);
+    });
+    return () => unsubscribeUsers();
+  }, []);
 
-    const startTimestamp = Timestamp.fromDate(dateObj);
-    const endTimestamp = Timestamp.fromDate(endOfDay);
+  // Calculate statistics via useMemo
+  const stats = React.useMemo(() => {
+    let todayRevenue = 0;
+    let newOrders = 0;
+    let totalRevenue = 0;
 
-    const qOrders = query(
-      collection(db, 'orders'),
-      where('createdAt', '>=', startTimestamp),
-      where('createdAt', '<', endTimestamp)
-    );
+    orders.forEach(order => {
+      const price = order.totalPrice || order.totalAmount || 0;
+      totalRevenue += price;
 
-    const unsubscribeOrders = onSnapshot(qOrders, (snapshot) => {
-      let revenue = 0;
-      let count = 0;
-      snapshot.docs.forEach(doc => {
-        const data = doc.data();
-        revenue += (data.totalPrice || data.totalAmount || 0);
-        count++;
-      });
-      setStats(prev => ({ 
-        ...prev, 
-        todayRevenue: revenue,
-        newOrders: count
-      }));
+      if (order.createdAt) {
+        const orderDate = order.createdAt.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
+        const localDate = new Date(orderDate.getTime() - orderDate.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+        if (localDate === selectedDashboardDate) {
+          todayRevenue += price;
+          newOrders++;
+        }
+      }
     });
 
-    return () => {
-      unsubscribeOrders();
+    return {
+      todayRevenue,
+      newOrders,
+      totalRevenue,
+      totalProducts,
+      totalUsers
     };
-  }, [selectedDashboardDate]);
+  }, [orders, selectedDashboardDate, totalProducts, totalUsers]);
+
+  // Map orders by date for Calendar view
+  const ordersByDate = React.useMemo(() => {
+    const map: Record<string, { revenue: number; items: { name: string; quantity: number }[] }> = {};
+    orders.forEach(order => {
+      if (!order.createdAt) return;
+      const orderDate = order.createdAt.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
+      const dateStr = new Date(orderDate.getTime() - orderDate.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+
+      if (!map[dateStr]) {
+        map[dateStr] = { revenue: 0, items: [] };
+      }
+
+      map[dateStr].revenue += (order.totalPrice || order.totalAmount || 0);
+
+      order.items?.forEach(item => {
+        const existing = map[dateStr].items.find(i => i.name === item.name);
+        if (existing) {
+          existing.quantity += item.quantity;
+        } else {
+          map[dateStr].items.push({ name: item.name, quantity: item.quantity });
+        }
+      });
+    });
+    return map;
+  }, [orders]);
 
   useEffect(() => {
     if (import.meta.env.DEV) {
@@ -183,13 +242,20 @@ export default function AdminDashboard() {
               />
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-12">
             {[
+              { 
+                label: '누적 전체 매출', 
+                value: `${stats.totalRevenue.toLocaleString()} KRW`, 
+                icon: TrendingUp, 
+                color: 'text-primary',
+                onClick: () => setActiveTab('orders')
+              },
               { 
                 label: selectedDashboardDate === todayDateString ? '오늘의 매출' : '선택일 매출', 
                 value: `${stats.todayRevenue.toLocaleString()} KRW`, 
                 icon: TrendingUp, 
-                color: 'text-primary',
+                color: 'text-secondary',
                 onClick: () => setActiveTab('orders')
               },
               { 
@@ -257,6 +323,174 @@ export default function AdminDashboard() {
               </div>
             </div>
           </div>
+
+          {/* Monthly Sales Calendar Section */}
+          <div className="mt-12 bg-surface-container-low p-8 rounded-3xl border border-outline-variant/10 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <div>
+                <h2 className="text-xl font-headline font-bold flex items-center gap-2">
+                  📅 월간 판매 및 출고 현황 캘린더
+                </h2>
+                <p className="text-xs text-on-surface-variant/70 mt-1">
+                  날짜를 클릭하면 해당 일의 통계와 주문 내역으로 연동됩니다. 날짜 위에 마우스를 올리면 당일 출고 품목을 상세히 확인하실 수 있습니다.
+                </p>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => {
+                    const prev = new Date(calendarDate);
+                    prev.setMonth(prev.getMonth() - 1);
+                    setCalendarDate(prev);
+                  }}
+                  className="px-3 py-1.5 text-xs bg-surface-container-high hover:bg-surface-container-highest rounded-xl border border-outline-variant/10 text-on-surface-variant hover:text-on-surface transition-all font-bold"
+                >
+                  &larr; 이전달
+                </button>
+                <span className="font-headline font-bold text-sm min-w-[100px] text-center px-1">
+                  {calendarDate.getFullYear()}년 {calendarDate.getMonth() + 1}월
+                </span>
+                <button 
+                  onClick={() => {
+                    const next = new Date(calendarDate);
+                    next.setMonth(next.getMonth() + 1);
+                    setCalendarDate(next);
+                  }}
+                  className="px-3 py-1.5 text-xs bg-surface-container-high hover:bg-surface-container-highest rounded-xl border border-outline-variant/10 text-on-surface-variant hover:text-on-surface transition-all font-bold"
+                >
+                  다음달 &rarr;
+                </button>
+              </div>
+            </div>
+
+            {/* Calendar Grid Header (Weeks) */}
+            <div className="grid grid-cols-7 gap-2 mb-2 text-center text-xs font-bold text-on-surface-variant/60 py-2 bg-surface-container-high/30 rounded-xl">
+              <div className="text-error">일</div>
+              <div>월</div>
+              <div>화</div>
+              <div>수</div>
+              <div>목</div>
+              <div>금</div>
+              <div className="text-primary">토</div>
+            </div>
+
+            {/* Calendar Days Grid */}
+            <div className="grid grid-cols-7 gap-2">
+              {(() => {
+                const year = calendarDate.getFullYear();
+                const month = calendarDate.getMonth();
+                const firstDayIndex = new Date(year, month, 1).getDay();
+                const lastDate = new Date(year, month + 1, 0).getDate();
+                const prevLastDate = new Date(year, month, 0).getDate();
+
+                const days = [];
+
+                // Prev Month
+                for (let i = firstDayIndex; i > 0; i--) {
+                  const d = prevLastDate - i + 1;
+                  const dateObj = new Date(year, month - 1, d);
+                  const dateString = new Date(dateObj.getTime() - dateObj.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+                  days.push({ day: d, isCurrentMonth: false, dateString });
+                }
+
+                // Current Month
+                for (let i = 1; i <= lastDate; i++) {
+                  const dateObj = new Date(year, month, i);
+                  const dateString = new Date(dateObj.getTime() - dateObj.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+                  days.push({ day: i, isCurrentMonth: true, dateString });
+                }
+
+                // Next Month
+                const remaining = 42 - days.length;
+                for (let i = 1; i <= remaining; i++) {
+                  const dateObj = new Date(year, month + 1, i);
+                  const dateString = new Date(dateObj.getTime() - dateObj.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+                  days.push({ day: i, isCurrentMonth: false, dateString });
+                }
+
+                return days.map((dayItem, index) => {
+                  const dayData = ordersByDate[dayItem.dateString];
+                  const hasOrders = dayData && dayData.revenue > 0;
+                  const isSelected = selectedDashboardDate === dayItem.dateString;
+                  const dayOfWeek = index % 7;
+                  
+                  // Text formatting for tooltip
+                  const tooltipText = hasOrders
+                    ? `[${dayItem.dateString}] 총 매출: ${dayData.revenue.toLocaleString()}원\n\n출고 품목:\n` + 
+                      dayData.items.map(item => `• ${item.name} (수량: ${item.quantity})`).join('\n')
+                    : `[${dayItem.dateString}] 판매 내역 없음`;
+
+                  return (
+                    <button
+                      key={index}
+                      title={tooltipText}
+                      onClick={() => {
+                        setSelectedDashboardDate(dayItem.dateString);
+                      }}
+                      className={`min-h-[110px] p-2.5 rounded-2xl border text-left flex flex-col justify-between transition-all group relative ${
+                        dayItem.isCurrentMonth 
+                          ? 'bg-surface-container-lowest text-on-surface border-outline-variant/10' 
+                          : 'bg-surface-container-low/30 text-on-surface-variant/40 border-outline-variant/5'
+                      } ${
+                        isSelected 
+                          ? 'ring-2 ring-primary border-primary bg-primary/5 shadow-md z-10' 
+                          : 'hover:bg-surface-container-high/40 hover:border-outline-variant/30 hover:-translate-y-0.5'
+                      }`}
+                    >
+                      {/* Date number */}
+                      <div className="flex items-center justify-between w-full">
+                        <span className={`text-xs font-bold rounded-lg px-1.5 py-0.5 ${
+                          isSelected ? 'bg-primary text-on-primary' : 
+                          dayOfWeek === 0 ? 'text-error' : 
+                          dayOfWeek === 6 ? 'text-primary' : ''
+                        }`}>
+                          {dayItem.day}
+                        </span>
+                        {hasOrders && (
+                          <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>
+                        )}
+                      </div>
+
+                      {/* Revenue and items */}
+                      <div className="mt-2 w-full flex-grow flex flex-col justify-end">
+                        {hasOrders ? (
+                          <>
+                            {/* Revenue */}
+                            <div className="text-[10px] font-extrabold text-primary mb-1 truncate">
+                              +₩{dayData.revenue.toLocaleString()}
+                            </div>
+                            
+                            {/* Items List */}
+                            <div className="space-y-0.5 overflow-hidden max-h-[48px] flex flex-col">
+                              {dayData.items.slice(0, 2).map((item, itemIdx) => (
+                                <div 
+                                  key={itemIdx} 
+                                  className="text-[9px] text-on-surface-variant bg-surface-container-high/50 px-1 rounded truncate leading-tight py-0.5 flex justify-between"
+                                >
+                                  <span className="truncate">{item.name}</span>
+                                  <span className="font-bold text-primary shrink-0 ml-1">x{item.quantity}</span>
+                                </div>
+                              ))}
+                              {dayData.items.length > 2 && (
+                                <div className="text-[8px] text-on-surface-variant/60 font-semibold pl-1">
+                                  외 {dayData.items.length - 2}건 출고
+                                </div>
+                              )}
+                            </div>
+                          </>
+                        ) : (
+                          <div className="text-[9px] text-on-surface-variant/20 italic self-end">
+                            -
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  );
+                });
+              })()}
+            </div>
+          </div>
+
         </>
       );
     }
