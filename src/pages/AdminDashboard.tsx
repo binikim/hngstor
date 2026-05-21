@@ -235,14 +235,6 @@ export default function AdminDashboard() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <h3 className="text-xl font-headline font-bold">운영 현황</h3>
             <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setIsCalendarOpen(true)}
-                className="flex items-center gap-2 bg-primary text-on-primary px-4 py-2.5 rounded-xl text-sm font-bold transition-all hover:bg-primary-container shadow-md"
-              >
-                <CalendarIcon size={16} />
-                월간 판매 캘린더 보기
-              </button>
               <div className="flex items-center gap-2 bg-surface-container-low px-4 py-2.5 rounded-xl border border-outline-variant/10">
                 <CalendarIcon size={16} className="text-on-surface-variant/50" />
                 <input 
