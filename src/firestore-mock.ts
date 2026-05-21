@@ -25,7 +25,7 @@ export const getDoc = async (ref: any) => {
     const res = await fetch(`${API_BASE}/content/${id}`);
     if (!res.ok) return { exists: () => false, data: () => null, id };
     const data = await res.json();
-    return { exists: () => true, data: () => data.content, id };
+    return { exists: () => true, data: () => ({ content: data.content }), id };
   }
 
   const res = await fetch(`${API_BASE}/${collectionName}/${id}`);

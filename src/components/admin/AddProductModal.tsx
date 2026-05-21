@@ -59,7 +59,6 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, categories
         stock: 0,
         image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=800'
       });
-      setIsCustomCategory(false);
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, 'products');
     } finally {

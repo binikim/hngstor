@@ -138,7 +138,13 @@ export const Navbar = () => {
     <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${isScrolled || location.pathname !== '/' ? 'glass py-4 shadow-xl' : 'bg-transparent py-6'}`}>
       <div className="max-w-[1920px] mx-auto px-6 md:px-12 flex justify-between items-center">
         <Link to="/" className="flex items-center relative z-10 group">
-          <img src="/logo.png" alt="핑크버튼 로고" className="h-10 md:h-12 object-contain group-hover:scale-105 transition-transform" />
+          {footerInfo?.logoImage ? (
+            <img src={footerInfo.logoImage} alt="핑크버튼 로고" className="h-10 md:h-12 object-contain group-hover:scale-105 transition-transform" />
+          ) : (
+            <span className="text-2xl font-black font-headline tracking-tighter text-primary">
+              {footerInfo?.logoText || '핑크버튼'}
+            </span>
+          )}
         </Link>
 
         <div className="hidden lg:flex items-center gap-8">
