@@ -278,19 +278,6 @@ export default function AdminDashboard() {
           </button>
         </div>
 
-        {/* Migration Banner */}
-        <div className="bg-error/10 border border-error text-error p-6 rounded-2xl mb-8 shadow-sm">
-          <h3 className="font-bold text-lg mb-2 flex items-center gap-2">⚠️ 무료 로컬 DB로 데이터 이전이 필요합니다!</h3>
-          <p className="text-sm mb-4 leading-relaxed">
-            현재 확인하고 계신 데이터는 <strong>기존 파이어베이스 서버</strong>에 임시 연결된 상태입니다.<br/>
-            파이어베이스 자체 보안 규칙 때문에 <strong>'주문 상태 변경' 버튼이 눌리지 않고 막히고 있습니다.</strong><br/>
-            이를 완벽히 해결하고 평생 무료로 사이트를 운영하시려면 아래 버튼을 눌러 데이터를 로컬 DB로 이전해 주세요!
-          </p>
-          <a href="/migrate" className="inline-block bg-error hover:bg-error/90 text-white px-6 py-3 rounded-xl font-bold transition-colors">
-            👉 클릭해서 데이터 자동 이전하기
-          </a>
-        </div>
-
         {/* Admin Tabs */}
         <div className="flex gap-2 overflow-x-auto pb-6 mb-8 scrollbar-hide">
           {[
