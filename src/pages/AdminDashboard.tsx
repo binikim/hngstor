@@ -359,7 +359,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Admin Tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-6 mb-8 scrollbar-hide">
+        <div className="flex justify-start md:justify-end gap-2 overflow-x-auto pb-6 mb-8 scrollbar-hide">
           {[
             { id: 'dashboard', label: '대시보드', icon: LayoutDashboard },
             { id: 'products', label: '제품 관리', icon: Package },
