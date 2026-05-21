@@ -351,35 +351,35 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen pt-24 bg-background pb-20">
       <div className="max-w-[1920px] mx-auto px-6 md:px-12">
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-12 gap-6">
           <div>
             <h1 className="text-4xl font-headline font-bold mb-2">관리자 센터</h1>
             <p className="text-on-surface-variant font-light">핑크버튼 운영을 위한 통합 관리 시스템입니다.</p>
           </div>
-        </div>
 
-        {/* Admin Tabs */}
-        <div className="flex justify-start md:justify-end gap-2 overflow-x-auto pb-6 mb-8 scrollbar-hide">
-          {[
-            { id: 'dashboard', label: '대시보드', icon: LayoutDashboard },
-            { id: 'products', label: '제품 관리', icon: Package },
-            { id: 'orders', label: '주문 관리', icon: ShoppingBag },
-            { id: 'users', label: '회원 관리', icon: Users },
-            { id: 'content', label: '컨텐츠 관리', icon: FileText },
-            { id: 'settings', label: '설정', icon: Settings },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as AdminTab)}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all whitespace-nowrap ${
-                activeTab === tab.id 
-                ? 'bg-primary text-on-primary shadow-lg shadow-primary/20' 
-                : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high'
-              }`}
-            >
-              <tab.icon size={18} /> {tab.label}
-            </button>
-          ))}
+          {/* Admin Tabs */}
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide lg:pb-0 shrink-0">
+            {[
+              { id: 'dashboard', label: '대시보드', icon: LayoutDashboard },
+              { id: 'products', label: '제품 관리', icon: Package },
+              { id: 'orders', label: '주문 관리', icon: ShoppingBag },
+              { id: 'users', label: '회원 관리', icon: Users },
+              { id: 'content', label: '컨텐츠 관리', icon: FileText },
+              { id: 'settings', label: '설정', icon: Settings },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as AdminTab)}
+                className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold transition-all whitespace-nowrap ${
+                  activeTab === tab.id 
+                  ? 'bg-primary text-on-primary shadow-lg shadow-primary/20' 
+                  : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high'
+                }`}
+              >
+                <tab.icon size={18} /> {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {renderContent()}
