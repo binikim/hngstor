@@ -30,6 +30,13 @@ declare global {
 import { collection, addDoc, serverTimestamp, doc, updateDoc, getDoc, increment } from 'firebase/firestore';
 import { auth, db, handleFirestoreError, OperationType } from '../firebase';
 
+// ==========================================
+// 결제 시스템 테스트 모드 설정 (스위치)
+// ==========================================
+const IS_TEST_MODE = true; // 실결제 전환 시 false로 변경하세요.
+const TEST_STORE_CODE = 'imp19407491'; // 포트원 공용 테스트 가맹점 식별코드
+const REAL_STORE_CODE = 'YOUR_REAL_STORE_CODE'; // 실 결제 가맹점 식별코드 (예: impXXXXXXX)
+
 export default function CheckoutPage() {
   const { cart, totalPrice, totalItems, clearCart } = useCart();
   const navigate = useNavigate();
@@ -244,8 +251,8 @@ export default function CheckoutPage() {
         return;
       }
 
-      // Initialize Portone with test store ID
-      IMP.init('imp19407491');
+      // Initialize Portone with store ID (Switch between Test and Real)
+      IMP.init(IS_TEST_MODE ? TEST_STORE_CODE : REAL_STORE_CODE);
 
       const tempMerchantUid = `mid_${new Date().getTime()}`;
 
@@ -253,27 +260,54 @@ export default function CheckoutPage() {
       let pgProvider = 'html5_inicis';
       let payMethod = 'card';
 
-      switch (formData.paymentMethod) {
-        case 'kakaopay':
-          pgProvider = 'kakaopay';
-          payMethod = 'card';
-          break;
-        case 'tosspay':
-          pgProvider = 'tosspay';
-          payMethod = 'card';
-          break;
-        case 'trans':
-          pgProvider = 'html5_inicis';
-          payMethod = 'trans';
-          break;
-        case 'vbank':
-          pgProvider = 'html5_inicis';
-          payMethod = 'vbank';
-          break;
-        default: // 'card'
-          pgProvider = 'html5_inicis';
-          payMethod = 'card';
-          break;
+      if (IS_TEST_MODE) {
+        // 테스트 모드 전용 PG 채널 설정
+        switch (formData.paymentMethod) {
+          case 'kakaopay':
+            pgProvider = 'kakaopay.TC0ONETIME';
+            payMethod = 'card';
+            break;
+          case 'tosspay':
+            pgProvider = 'tosspay.tosspay';
+            payMethod = 'card';
+            break;
+          case 'trans':
+            pgProvider = 'html5_inicis.TE_integration';
+            payMethod = 'trans';
+            break;
+          case 'vbank':
+            pgProvider = 'html5_inicis.TE_integration';
+            payMethod = 'vbank';
+            break;
+          default: // 'card'
+            pgProvider = 'html5_inicis.TE_integration';
+            payMethod = 'card';
+            break;
+        }
+      } else {
+        // 실결제 모드 PG 설정 (실 가맹점 계약 정보)
+        switch (formData.paymentMethod) {
+          case 'kakaopay':
+            pgProvider = 'kakaopay';
+            payMethod = 'card';
+            break;
+          case 'tosspay':
+            pgProvider = 'tosspay';
+            payMethod = 'card';
+            break;
+          case 'trans':
+            pgProvider = 'html5_inicis';
+            payMethod = 'trans';
+            break;
+          case 'vbank':
+            pgProvider = 'html5_inicis';
+            payMethod = 'vbank';
+            break;
+          default: // 'card'
+            pgProvider = 'html5_inicis';
+            payMethod = 'card';
+            break;
+        }
       }
 
       IMP.request_pay({

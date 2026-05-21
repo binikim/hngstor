@@ -389,7 +389,7 @@ export default function AdminDashboard() {
       {/* Calendar Modal */}
       {isCalendarOpen && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in">
-          <div className="bg-white w-full max-w-[1200px] rounded-3xl overflow-hidden shadow-2xl border border-outline-variant/10 flex flex-col p-8 max-h-[90vh]">
+          <div className="bg-white w-full max-w-[1200px] rounded-3xl overflow-hidden shadow-2xl border border-outline-variant/10 flex flex-col p-5 md:p-6 max-h-[95vh] lg:max-h-[90vh]">
             <div className="flex justify-between items-center border-b border-outline-variant/10 pb-4 mb-6">
               <div>
                 <h2 className="text-2xl font-headline font-bold flex items-center gap-2 text-on-surface">
@@ -506,7 +506,7 @@ export default function AdminDashboard() {
                           setSelectedDashboardDate(dayItem.dateString);
                           setIsCalendarOpen(false);
                         }}
-                        className={`min-h-[100px] p-2 rounded-2xl border text-left flex flex-col justify-between transition-all group relative ${
+                        className={`min-h-[70px] md:min-h-[85px] lg:min-h-[95px] p-1.5 md:p-2 rounded-2xl border text-left flex flex-col justify-between transition-all group relative ${
                           dayItem.isCurrentMonth 
                             ? 'bg-stone-50 text-on-surface border-outline-variant/20' 
                             : 'bg-zinc-100/40 text-zinc-400/60 border-zinc-200/20'
@@ -531,16 +531,16 @@ export default function AdminDashboard() {
                         </div>
 
                         {/* Revenue and items */}
-                        <div className="mt-2 w-full flex-grow flex flex-col justify-end">
+                        <div className="mt-1 md:mt-2 w-full flex-grow flex flex-col justify-end">
                           {hasOrders ? (
                             <>
                               {/* Revenue */}
-                              <div className="text-[11px] font-black text-rose-600 mb-1 truncate">
+                              <div className="text-[9px] md:text-[11px] font-black text-rose-600 mb-0.5 md:mb-1 truncate">
                                 +₩{dayData.revenue.toLocaleString()}
                               </div>
                               
                               {/* Items List */}
-                              <div className="space-y-0.5 overflow-hidden max-h-[44px] flex flex-col">
+                              <div className="space-y-0.5 overflow-hidden max-h-[32px] md:max-h-[44px] flex flex-col">
                                 {dayData.items.slice(0, 2).map((item, itemIdx) => (
                                   <div 
                                     key={itemIdx} 
