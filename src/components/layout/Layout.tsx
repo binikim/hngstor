@@ -66,10 +66,6 @@ export const Navbar = () => {
       setUser(currentUser);
       
       if (currentUser) {
-        if (import.meta.env.DEV) {
-          setIsAdmin(true);
-          return;
-        }
         const emailLower = currentUser.email?.toLowerCase();
         const userRef = doc(db, 'users', currentUser.uid);
         const userSnap = await getDoc(userRef);
