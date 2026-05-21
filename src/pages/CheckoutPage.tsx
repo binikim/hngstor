@@ -23,6 +23,7 @@ import { X } from 'lucide-react';
 declare global {
   interface Window {
     daum: any;
+    IMP: any;
   }
 }
 
@@ -37,6 +38,10 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderedItems, setOrderedItems] = useState<any[]>([]);
   const [orderedTotalPrice, setOrderedTotalPrice] = useState(0);
+
+  // Cash Modal State for Bank Transfer
+  const [isCashModalOpen, setIsCashModalOpen] = useState(false);
+  const [createdOrderId, setCreatedOrderId] = useState('');
 
   // Form states
   const [formData, setFormData] = useState({
@@ -192,56 +197,153 @@ export default function CheckoutPage() {
         }
       }
 
-      // 2. Create Order
-      const orderData = {
-        userId: auth.currentUser?.uid || 'anonymous',
-        userEmail: auth.currentUser?.email || 'anonymous',
-        items: cart,
-        totalPrice,
-        totalItems,
-        shippingInfo: {
-          ordererName: formData.ordererName,
-          ordererPhone: formData.ordererPhone,
-          recipientName: formData.recipientName,
-          recipientPhone: formData.recipientPhone,
-          zipCode: formData.zipCode,
-          address: formData.address,
-          detailAddress: formData.detailAddress,
-          deliveryNote: formData.deliveryNote
-        },
-        paymentMethod: formData.paymentMethod,
-        status: 'ordered',
-        createdAt: serverTimestamp()
-      };
+      // 2. Process Bank Transfer (무통장 입금) immediately without PG
+      if (formData.paymentMethod === 'cash') {
+        const orderData = {
+          userId: auth.currentUser?.uid || 'anonymous',
+          userEmail: auth.currentUser?.email || 'anonymous',
+          items: cart,
+          totalPrice,
+          totalItems,
+          shippingInfo: {
+            ordererName: formData.ordererName,
+            ordererPhone: formData.ordererPhone,
+            recipientName: formData.recipientName,
+            recipientPhone: formData.recipientPhone,
+            zipCode: formData.zipCode,
+            address: formData.address,
+            detailAddress: formData.detailAddress,
+            deliveryNote: formData.deliveryNote
+          },
+          paymentMethod: 'cash',
+          status: 'pending', // Pending payment
+          createdAt: serverTimestamp()
+        };
 
-      const orderRef = await addDoc(collection(db, 'orders'), orderData);
+        const orderRef = await addDoc(collection(db, 'orders'), orderData);
 
-      // 3. Update stock for each item
-      try {
+        // Update stock
         for (const item of cart) {
           const productRef = doc(db, 'products', item.id);
           await updateDoc(productRef, {
             stock: increment(-item.quantity)
           });
         }
-      } catch (error) {
-        console.error("Stock Update Error:", error);
-        handleFirestoreError(error, OperationType.UPDATE, `products (OrderID: ${orderRef.id})`);
-        return; // Stop here if stock update fails
+
+        setCreatedOrderId(orderRef.id);
+        setIsCashModalOpen(true);
+        setIsSubmitting(false);
+        return;
       }
 
-      clearCart();
-      alert('주문이 완료되었습니다!');
-      navigate('/my-orders');
+      // 3. Process PG Payments (Card, KakaoPay, TossPay, Trans, VBank) via Portone
+      const { IMP } = window;
+      if (!IMP) {
+        alert('결제 모듈을 로드하지 못했습니다. 새로고침 후 다시 시도해 주세요.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Initialize Portone with test store ID
+      IMP.init('imp19407491');
+
+      const tempMerchantUid = `mid_${new Date().getTime()}`;
+
+      // PG and Payment Method Mapping
+      let pgProvider = 'html5_inicis';
+      let payMethod = 'card';
+
+      switch (formData.paymentMethod) {
+        case 'kakaopay':
+          pgProvider = 'kakaopay';
+          payMethod = 'card';
+          break;
+        case 'tosspay':
+          pgProvider = 'tosspay';
+          payMethod = 'card';
+          break;
+        case 'trans':
+          pgProvider = 'html5_inicis';
+          payMethod = 'trans';
+          break;
+        case 'vbank':
+          pgProvider = 'html5_inicis';
+          payMethod = 'vbank';
+          break;
+        default: // 'card'
+          pgProvider = 'html5_inicis';
+          payMethod = 'card';
+          break;
+      }
+
+      IMP.request_pay({
+        pg: pgProvider,
+        pay_method: payMethod,
+        merchant_uid: tempMerchantUid,
+        name: cart.length > 1 ? `${cart[0].name} 외 ${cart.length - 1}건` : cart[0].name,
+        amount: totalPrice,
+        buyer_email: auth.currentUser?.email || 'anonymous',
+        buyer_name: formData.recipientName,
+        buyer_tel: formData.recipientPhone,
+        buyer_addr: `${formData.address} ${formData.detailAddress}`,
+        buyer_postcode: formData.zipCode,
+      }, async (rsp: any) => {
+        if (rsp.success) {
+          try {
+            // Save order to Firestore with payment info
+            const orderData = {
+              userId: auth.currentUser?.uid || 'anonymous',
+              userEmail: auth.currentUser?.email || 'anonymous',
+              items: cart,
+              totalPrice,
+              totalItems,
+              shippingInfo: {
+                ordererName: formData.ordererName,
+                ordererPhone: formData.ordererPhone,
+                recipientName: formData.recipientName,
+                recipientPhone: formData.recipientPhone,
+                zipCode: formData.zipCode,
+                address: formData.address,
+                detailAddress: formData.detailAddress,
+                deliveryNote: formData.deliveryNote
+              },
+              paymentMethod: formData.paymentMethod,
+              paymentInfo: {
+                imp_uid: rsp.imp_uid,
+                merchant_uid: rsp.merchant_uid,
+                pg_provider: rsp.pg_provider,
+                pay_method: rsp.pay_method
+              },
+              status: 'ordered', // Payment completed
+              createdAt: serverTimestamp()
+            };
+
+            const orderRef = await addDoc(collection(db, 'orders'), orderData);
+
+            // Update stock
+            for (const item of cart) {
+              const productRef = doc(db, 'products', item.id);
+              await updateDoc(productRef, {
+                stock: increment(-item.quantity)
+              });
+            }
+
+            clearCart();
+            alert('결제 및 주문이 완료되었습니다!');
+            navigate('/my-orders');
+          } catch (error) {
+            console.error("Order Save Error:", error);
+            alert('주문 처리 중 오류가 발생했습니다. 고객센터로 문의해 주세요.');
+          }
+        } else {
+          alert(`결제에 실패하였습니다. 사유: ${rsp.error_msg}`);
+        }
+        setIsSubmitting(false);
+      });
+
     } catch (error: any) {
       console.error("Order Submission Error:", error);
-      // If we already handled the error in the sub-try block, don't re-handle here if it was already thrown
-      if (!(error.message && error.message.includes('"operationType"'))) {
-        handleFirestoreError(error, OperationType.WRITE, 'orders');
-      } else {
-        throw error;
-      }
-    } finally {
+      handleFirestoreError(error, OperationType.WRITE, 'orders');
       setIsSubmitting(false);
     }
   };
@@ -447,12 +549,11 @@ export default function CheckoutPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {[
                       { id: 'addr_paymethod0', value: 'card', label: '카드 결제' },
-                      { id: 'addr_paymethod1', value: 'tcash', label: '에스크로(실시간 계좌이체)' },
-                      { id: 'addr_paymethod2', value: 'icash', label: '가상계좌' },
-                      { id: 'addr_paymethod3', value: 'kakaopay', label: '카카오페이(간편결제)' },
-                      { id: 'addr_paymethod4', value: 'cell', label: '휴대폰 결제' },
+                      { id: 'addr_paymethod1', value: 'kakaopay', label: '카카오페이' },
+                      { id: 'addr_paymethod2', value: 'tosspay', label: '토스페이' },
+                      { id: 'addr_paymethod3', value: 'trans', label: '실시간 계좌이체' },
+                      { id: 'addr_paymethod4', value: 'vbank', label: '가상계좌' },
                       { id: 'addr_paymethod5', value: 'cash', label: '무통장 입금' },
-                      { id: 'addr_paymethod6', value: 'danalpay_ispay', label: '삼성페이' },
                     ].map((method) => (
                       <div 
                         key={method.id} 
@@ -558,6 +659,74 @@ export default function CheckoutPage() {
                 닫기
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cash Modal (무통장 입금 안내) */}
+      {isCashModalOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-surface-container-lowest w-full max-w-[500px] rounded-3xl overflow-hidden shadow-2xl border border-outline-variant/10 flex flex-col p-8 space-y-6">
+            <div className="text-center space-y-2">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto text-primary mb-4">
+                <CheckCircle2 size={32} />
+              </div>
+              <h2 className="text-2xl font-headline font-bold text-on-surface">무통장 입금 안내</h2>
+              <p className="text-sm text-on-surface-variant/80 font-medium">주문이 정상적으로 접수되었습니다. 아래 계좌로 입금해 주세요.</p>
+            </div>
+
+            <div className="bg-surface-container-low p-6 rounded-2xl border border-outline-variant/10 space-y-4">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-on-surface-variant font-medium">입금 은행</span>
+                <span className="font-bold text-on-surface">신한은행</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-on-surface-variant font-medium">계좌 번호</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-on-surface">110-523-123456</span>
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText('110-523-123456');
+                      alert('계좌번호가 복사되었습니다.');
+                    }}
+                    className="text-xs text-primary font-bold hover:underline"
+                  >
+                    복사
+                  </button>
+                </div>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-on-surface-variant font-medium">예금주</span>
+                <span className="font-bold text-on-surface">H&G Stoa</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-on-surface-variant font-medium">입금 금액</span>
+                <span className="font-bold text-primary text-base">{totalPrice.toLocaleString()}원</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-on-surface-variant font-medium">입금자명</span>
+                <span className="font-bold text-on-surface">{formData.ordererName}</span>
+              </div>
+            </div>
+
+            <div className="text-xs text-on-surface-variant/70 leading-relaxed space-y-1">
+              <p>• 반드시 입금자명과 금액이 일치해야 자동 확인이 가능합니다.</p>
+              <p>• 주문 후 24시간 이내에 입금되지 않으면 주문이 자동으로 취소됩니다.</p>
+              <p>• 입금 확인 후 배송이 시작됩니다.</p>
+            </div>
+
+            <button 
+              type="button"
+              onClick={() => {
+                setIsCashModalOpen(false);
+                clearCart();
+                navigate('/my-orders');
+              }}
+              className="w-full bg-primary text-on-primary py-4 rounded-xl font-bold hover:bg-primary-container transition-all text-center"
+            >
+              확인 (주문 내역으로 이동)
+            </button>
           </div>
         </div>
       )}
