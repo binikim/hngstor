@@ -504,12 +504,6 @@ export default function AdminDashboard() {
             <h1 className="text-4xl font-headline font-bold mb-2">관리자 센터</h1>
             <p className="text-on-surface-variant font-light">핑크버튼 운영을 위한 통합 관리 시스템입니다.</p>
           </div>
-          <button 
-            onClick={handleLogout}
-            className="flex items-center gap-2 px-6 py-3 bg-surface-container-high rounded-xl text-on-surface hover:bg-surface-container-highest transition-all"
-          >
-            <LogOut size={18} /> 로그아웃
-          </button>
         </div>
 
         {/* Admin Tabs */}
