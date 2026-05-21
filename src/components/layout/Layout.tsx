@@ -64,17 +64,17 @@ export const Navbar = () => {
     
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
-      if (import.meta.env.DEV) {
-        setIsAdmin(true);
-        return;
-      }
       
       if (currentUser) {
+        if (import.meta.env.DEV) {
+          setIsAdmin(true);
+          return;
+        }
         const emailLower = currentUser.email?.toLowerCase();
         const userRef = doc(db, 'users', currentUser.uid);
         const userSnap = await getDoc(userRef);
         const userData = userSnap.data();
-        const isDefaultAdmin = emailLower === 'kimsabin71@gmail.com' || emailLower === 'admin@hng.com' || import.meta.env.DEV;
+        const isDefaultAdmin = emailLower === 'kimsabin71@gmail.com' || emailLower === 'admin@hng.com';
         setIsAdmin(userData?.role === 'admin' || isDefaultAdmin);
       } else {
         setIsAdmin(false);
