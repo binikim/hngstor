@@ -396,14 +396,14 @@ export default function AdminDashboard() {
 
       {/* Calendar Modal */}
       {isCalendarOpen && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-surface-container-lowest w-full max-w-[1200px] rounded-3xl overflow-hidden shadow-2xl border border-outline-variant/10 flex flex-col p-8 max-h-[90vh]">
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in">
+          <div className="bg-white w-full max-w-[1200px] rounded-3xl overflow-hidden shadow-2xl border border-outline-variant/10 flex flex-col p-8 max-h-[90vh]">
             <div className="flex justify-between items-center border-b border-outline-variant/10 pb-4 mb-6">
               <div>
-                <h2 className="text-2xl font-headline font-bold flex items-center gap-2">
+                <h2 className="text-2xl font-headline font-bold flex items-center gap-2 text-on-surface">
                   📅 월간 판매 및 출고 현황 캘린더
                 </h2>
-                <p className="text-xs text-on-surface-variant/70 mt-1">
+                <p className="text-xs text-on-surface-variant font-medium mt-1">
                   날짜를 클릭하면 해당 일의 통계와 주문 내역으로 연동됩니다. 날짜 위에 마우스를 올리면 당일 출고 품목을 상세히 확인하실 수 있습니다.
                 </p>
               </div>
@@ -449,7 +449,7 @@ export default function AdminDashboard() {
               </div>
 
               {/* Calendar Grid Header (Weeks) */}
-              <div className="grid grid-cols-7 gap-2 mb-2 text-center text-xs font-bold text-on-surface-variant/60 py-2 bg-surface-container-high/30 rounded-xl">
+              <div className="grid grid-cols-7 gap-2 mb-2 text-center text-xs font-bold text-on-surface-variant py-2 bg-rose-50/80 rounded-xl">
                 <div className="text-error">일</div>
                 <div>월</div>
                 <div>화</div>
@@ -516,20 +516,20 @@ export default function AdminDashboard() {
                         }}
                         className={`min-h-[100px] p-2 rounded-2xl border text-left flex flex-col justify-between transition-all group relative ${
                           dayItem.isCurrentMonth 
-                            ? 'bg-surface-container-lowest text-on-surface border-outline-variant/10' 
-                            : 'bg-surface-container-low/30 text-on-surface-variant/40 border-outline-variant/5'
+                            ? 'bg-stone-50 text-on-surface border-outline-variant/20' 
+                            : 'bg-zinc-100/40 text-zinc-400/60 border-zinc-200/20'
                         } ${
                           isSelected 
                             ? 'ring-2 ring-primary border-primary bg-primary/5 shadow-md z-10' 
-                            : 'hover:bg-surface-container-high/40 hover:border-outline-variant/30 hover:-translate-y-0.5'
+                            : 'hover:bg-rose-50/50 hover:border-rose-200 hover:-translate-y-0.5'
                         }`}
                       >
                         {/* Date number */}
                         <div className="flex items-center justify-between w-full">
                           <span className={`text-xs font-bold rounded-lg px-1.5 py-0.5 ${
                             isSelected ? 'bg-primary text-on-primary' : 
-                            dayOfWeek === 0 ? 'text-error' : 
-                            dayOfWeek === 6 ? 'text-primary' : ''
+                            dayOfWeek === 0 ? 'text-error font-extrabold' : 
+                            dayOfWeek === 6 ? 'text-primary font-extrabold' : 'text-on-surface font-extrabold'
                           }`}>
                             {dayItem.day}
                           </span>
@@ -543,7 +543,7 @@ export default function AdminDashboard() {
                           {hasOrders ? (
                             <>
                               {/* Revenue */}
-                              <div className="text-[10px] font-extrabold text-primary mb-1 truncate">
+                              <div className="text-[11px] font-black text-rose-600 mb-1 truncate">
                                 +₩{dayData.revenue.toLocaleString()}
                               </div>
                               
@@ -552,14 +552,14 @@ export default function AdminDashboard() {
                                 {dayData.items.slice(0, 2).map((item, itemIdx) => (
                                   <div 
                                     key={itemIdx} 
-                                    className="text-[9px] text-on-surface-variant bg-surface-container-high/50 px-1 rounded truncate leading-tight py-0.5 flex justify-between"
+                                    className="text-[9px] text-rose-950 bg-rose-100/70 px-1 rounded truncate leading-tight py-0.5 flex justify-between font-bold"
                                   >
                                     <span className="truncate">{item.name}</span>
-                                    <span className="font-bold text-primary shrink-0 ml-1">x{item.quantity}</span>
+                                    <span className="font-extrabold text-rose-600 shrink-0 ml-1">x{item.quantity}</span>
                                   </div>
                                 ))}
                                 {dayData.items.length > 2 && (
-                                  <div className="text-[8px] text-on-surface-variant/60 font-semibold pl-1">
+                                  <div className="text-[9px] text-rose-700 font-extrabold pl-1 mt-0.5">
                                     외 {dayData.items.length - 2}건 출고
                                   </div>
                                 )}
