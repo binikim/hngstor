@@ -312,14 +312,7 @@ export default function Home() {
               {homeContent?.categoriesTitle || '베스트 카테고리'}
             </h2>
           </div>
-          <button 
-            onClick={() => {
-              if (categoriesData.length > 0) {
-                navigate(categoriesData[0].path);
-              }
-            }}
-            className="group text-primary font-bold flex items-center gap-2 hover:translate-x-2 transition-transform"
-          >
+          <button className="group text-primary font-bold flex items-center gap-2 hover:translate-x-2 transition-transform">
             전체보기 <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
@@ -371,14 +364,7 @@ export default function Home() {
         </div>
 
         <div className="mt-20 text-center">
-          <button 
-            onClick={() => {
-              if (categoriesData.length > 0) {
-                navigate(categoriesData[0].path);
-              }
-            }}
-            className="group px-10 py-4 border border-outline-variant/20 rounded-xl font-bold hover:bg-surface-container-low transition-all flex items-center gap-3 mx-auto"
-          >
+          <button className="group px-10 py-4 border border-outline-variant/20 rounded-xl font-bold hover:bg-surface-container-low transition-all flex items-center gap-3 mx-auto">
             더 많은 제품 보기 <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
           </button>
         </div>

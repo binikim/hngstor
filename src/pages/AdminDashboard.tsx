@@ -33,6 +33,7 @@ import {
   X
 } from 'lucide-react';
 import AdminProducts from './admin/AdminProducts';
+import AdminPopularProducts from './admin/AdminPopularProducts';
 import AdminOrders from './admin/AdminOrders';
 import AdminUsers from './admin/AdminUsers';
 import AdminSettings from './admin/AdminSettings';
@@ -68,7 +69,7 @@ interface Order {
   deliveryCompany?: string;
 }
 
-type AdminTab = 'dashboard' | 'products' | 'orders' | 'users' | 'settings' | 'content';
+type AdminTab = 'dashboard' | 'products' | 'popular' | 'orders' | 'users' | 'settings' | 'content';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -226,6 +227,7 @@ export default function AdminDashboard() {
   const renderContent = () => {
     switch (activeTab) {
       case 'products': return <AdminProducts />;
+      case 'popular': return <AdminPopularProducts />;
       case 'orders': return <AdminOrders />;
       case 'users': return <AdminUsers />;
       case 'settings': return <AdminSettings />;
@@ -355,6 +357,7 @@ export default function AdminDashboard() {
             {[
               { id: 'dashboard', label: '대시보드', icon: LayoutDashboard },
               { id: 'products', label: '제품 관리', icon: Package },
+              { id: 'popular', label: '인기 제품', icon: TrendingUp },
               { id: 'orders', label: '주문 관리', icon: ShoppingBag },
               { id: 'users', label: '회원 관리', icon: Users },
               { id: 'content', label: '컨텐츠 관리', icon: FileText },
