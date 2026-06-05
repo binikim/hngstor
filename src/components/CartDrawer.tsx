@@ -8,6 +8,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ShoppingBag, X, Plus, Minus, Trash2, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { auth } from '../firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -17,6 +19,14 @@ interface CartDrawerProps {
 export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const { cart, removeFromCart, updateQuantity, totalPrice, totalItems } = useCart();
   const navigate = useNavigate();
+  const [user, setUser] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
 
   return (
     <AnimatePresence>
@@ -114,32 +124,43 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             </div>
 
             {/* Footer */}
-            {cart.length > 0 && (
-              <div className="p-6 bg-surface-container-high border-t border-outline-variant/10 space-y-3">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-on-surface-variant font-medium">총 합계</span>
-                  <span className="text-xl font-headline font-bold text-primary">{totalPrice.toLocaleString()} KRW</span>
-                </div>
-                <button 
-                  onClick={() => {
-                    onClose();
-                    navigate('/checkout');
-                  }}
-                  className="w-full bg-primary text-on-primary py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary-container transition-all transform active:scale-95"
-                >
-                  주문하기 <ArrowRight size={20} />
-                </button>
-                <button 
-                  onClick={() => {
-                    onClose();
-                    navigate('/cart');
-                  }}
-                  className="w-full bg-surface-container-lowest text-on-surface py-3 rounded-xl font-bold text-sm hover:bg-surface-container-highest transition-all"
-                >
-                  장바구니 전체보기
-                </button>
-              </div>
-            )}
+            <div className="p-6 bg-surface-container-high border-t border-outline-variant/10 space-y-3 shrink-0">
+              {cart.length > 0 && (
+                <>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-on-surface-variant font-medium">총 합계</span>
+                    <span className="text-xl font-headline font-bold text-primary">{totalPrice.toLocaleString()} KRW</span>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      onClose();
+                      navigate('/checkout');
+                    }}
+                    className="w-full bg-primary text-on-primary py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary-container transition-all transform active:scale-95"
+                  >
+                    주문하기 <ArrowRight size={20} />
+                  </button>
+                  <button 
+                    onClick={() => {
+                      onClose();
+                      navigate('/cart');
+                    }}
+                    className="w-full bg-surface-container-lowest text-on-surface py-3 rounded-xl font-bold text-sm hover:bg-surface-container-highest transition-all"
+                  >
+                    장바구니 전체보기
+                  </button>
+                </>
+              )}
+              <button 
+                onClick={() => {
+                  onClose();
+                  navigate('/my-orders');
+                }}
+                className="w-full bg-surface-container-low border border-outline-variant/20 text-on-surface py-3 rounded-xl font-bold text-sm hover:bg-surface-container-highest transition-all flex items-center justify-center gap-2"
+              >
+                주문 내역 확인
+              </button>
+            </div>
           </motion.div>
         </>
       )}

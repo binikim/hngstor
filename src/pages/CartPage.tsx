@@ -29,12 +29,20 @@ export default function CartPage() {
             아직 선택하신 상품이 없습니다. <br />
             핑크버튼의 프리미엄 컬렉션을 둘러보세요.
           </p>
-          <Link 
-            to="/" 
-            className="inline-flex items-center gap-2 bg-primary text-on-primary px-8 py-4 rounded-xl font-bold hover:bg-primary-container transition-all transform active:scale-95"
-          >
-            쇼핑하러 가기 <ArrowRight size={20} />
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link 
+              to="/" 
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-primary text-on-primary px-8 py-4 rounded-xl font-bold hover:bg-primary-container transition-all transform active:scale-95"
+            >
+              쇼핑하러 가기 <ArrowRight size={20} />
+            </Link>
+            <Link 
+              to="/my-orders" 
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-outline-variant/20 text-on-surface px-8 py-4 rounded-xl font-bold hover:bg-surface-container-high transition-all"
+            >
+              주문 내역 확인
+            </Link>
+          </div>
         </motion.div>
       </div>
     );
@@ -157,6 +165,12 @@ export default function CartPage() {
                 >
                   쇼핑 계속하기
                 </Link>
+                <button 
+                  onClick={() => navigate('/my-orders')}
+                  className="w-full border border-outline-variant/20 text-on-surface py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-surface-container-highest transition-all"
+                >
+                  주문 내역 확인
+                </button>
               </div>
 
               <div className="pt-6 border-t border-outline-variant/10">
