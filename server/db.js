@@ -23,7 +23,8 @@ db.serialize(() => {
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
       uid TEXT PRIMARY KEY,
-      email TEXT NOT NULL,
+      email TEXT NOT NULL UNIQUE,
+      password TEXT,
       displayName TEXT,
       phoneNumber TEXT,
       role TEXT DEFAULT 'user',
@@ -31,6 +32,19 @@ db.serialize(() => {
       updatedAt TEXT
     )
   `);
+
+  // Migrate: add password column if it doesn't exist
+  db.all("PRAGMA table_info(users)", (err, cols) => {
+    if (!err && cols) {
+      const hasPassword = cols.some(c => c.name === 'password');
+      if (!hasPassword) {
+        db.run("ALTER TABLE users ADD COLUMN password TEXT", (alterErr) => {
+          if (alterErr) console.error("Error adding password column to users:", alterErr);
+          else console.log("Added password column to users table.");
+        });
+      }
+    }
+  });
 
   // Products Table
   db.run(`

@@ -66,12 +66,19 @@ export const Navbar = () => {
       setUser(currentUser);
       
       if (currentUser) {
-        const emailLower = currentUser.email?.toLowerCase();
-        const userRef = doc(db, 'users', currentUser.uid);
-        const userSnap = await getDoc(userRef);
-        const userData = userSnap.data();
-        const isDefaultAdmin = emailLower === 'kimsabin71@gmail.com' || emailLower === 'admin@hng.com';
-        setIsAdmin(userData?.role === 'admin' || isDefaultAdmin);
+        try {
+          const emailLower = currentUser.email?.toLowerCase();
+          const userRef = doc(db, 'users', currentUser.uid);
+          const userSnap = await getDoc(userRef);
+          const userData = userSnap.data();
+          const isDefaultAdmin = emailLower === 'kimsabin71@gmail.com' || emailLower === 'admin@hng.com';
+          setIsAdmin(userData?.role === 'admin' || isDefaultAdmin);
+        } catch (error) {
+          console.error("Error retrieving user role in layout:", error);
+          const emailLower = currentUser.email?.toLowerCase();
+          const isDefaultAdmin = emailLower === 'kimsabin71@gmail.com' || emailLower === 'admin@hng.com';
+          setIsAdmin(isDefaultAdmin);
+        }
       } else {
         setIsAdmin(false);
       }

@@ -89,6 +89,10 @@ export const addDoc = async (ref: any, data: any) => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({ error: 'Add document failed' }));
+    throw new Error(errData.error || 'Add document failed');
+  }
   const result = await res.json();
   return { id: result.id || result.uid };
 };
@@ -99,20 +103,28 @@ export const setDoc = async (ref: any, data: any, options?: any) => {
   const id = parts.slice(1).join('/');
 
   if (collectionName === 'siteContent') {
-    await fetch(`${API_BASE}/content/${id}`, {
+    const res = await fetch(`${API_BASE}/content/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content: data })
     });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({ error: 'Set site content failed' }));
+      throw new Error(errData.error || 'Set site content failed');
+    }
     return;
   }
 
   const method = options?.merge ? 'PUT' : 'POST';
-  await fetch(`${API_BASE}/${collectionName}/${id}`, {
+  const res = await fetch(`${API_BASE}/${collectionName}/${id}`, {
     method,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({ error: 'Set document failed' }));
+    throw new Error(errData.error || 'Set document failed');
+  }
 };
 
 export const updateDoc = async (ref: any, data: any) => {
@@ -130,11 +142,15 @@ export const updateDoc = async (ref: any, data: any) => {
     }
   }
 
-  await fetch(`${API_BASE}/${collectionName}/${id}`, {
+  const res = await fetch(`${API_BASE}/${collectionName}/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(cleanedData)
   });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({ error: 'Update document failed' }));
+    throw new Error(errData.error || 'Update document failed');
+  }
 };
 
 export const deleteDoc = async (ref: any) => {
@@ -142,9 +158,13 @@ export const deleteDoc = async (ref: any) => {
   const collectionName = parts[0];
   const id = parts.slice(1).join('/');
 
-  await fetch(`${API_BASE}/${collectionName}/${id}`, {
+  const res = await fetch(`${API_BASE}/${collectionName}/${id}`, {
     method: 'DELETE'
   });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({ error: 'Delete document failed' }));
+    throw new Error(errData.error || 'Delete document failed');
+  }
 };
 
 export const serverTimestamp = () => new Date().toISOString();

@@ -39,7 +39,9 @@ export default function LoginPage() {
             localStorage.setItem('isAdmin', 'true');
             navigate('/admin');
           } else {
-            // Preserve admin flag; redirect if on login pages
+            if (!(userRole === 'admin' || isDefaultAdmin)) {
+              localStorage.removeItem('isAdmin');
+            }
             if (window.location.pathname === '/login' || window.location.pathname === '/admin/login') {
               navigate('/');
             }
@@ -111,7 +113,8 @@ export default function LoginPage() {
           // Do not set admin flag
         }
       } else {
-        // regular user login - preserve admin flag for concurrent sessions
+        // regular user login - clear admin flag
+        localStorage.removeItem('isAdmin');
         navigate('/');
       }
     } catch (error) {

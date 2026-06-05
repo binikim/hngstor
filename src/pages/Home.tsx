@@ -255,17 +255,32 @@ export default function Home() {
     const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        const emailLower = currentUser.email?.toLowerCase();
-        const isDefaultAdmin = emailLower === 'kimsabin71@gmail.com' || emailLower === 'admin@hng.com';
-        
-        const userRef = doc(db, 'users', currentUser.uid);
-        const userSnap = await getDoc(userRef);
-        const userData = userSnap.data();
-        const userRole = userData?.role || (isDefaultAdmin ? 'admin' : 'user');
+        try {
+          const emailLower = currentUser.email?.toLowerCase();
+          const isDefaultAdmin = emailLower === 'kimsabin71@gmail.com' || emailLower === 'admin@hng.com';
+          
+          const userRef = doc(db, 'users', currentUser.uid);
+          const userSnap = await getDoc(userRef);
+          const userData = userSnap.data();
+          const userRole = userData?.role || (isDefaultAdmin ? 'admin' : 'user');
 
-        if (userRole === 'admin') {
-          localStorage.setItem('isAdmin', 'true');
+          if (userRole === 'admin') {
+            localStorage.setItem('isAdmin', 'true');
+          } else {
+            localStorage.removeItem('isAdmin');
+          }
+        } catch (error) {
+          console.error("Home auth check error:", error);
+          const emailLower = currentUser.email?.toLowerCase();
+          const isDefaultAdmin = emailLower === 'kimsabin71@gmail.com' || emailLower === 'admin@hng.com';
+          if (isDefaultAdmin) {
+            localStorage.setItem('isAdmin', 'true');
+          } else {
+            localStorage.removeItem('isAdmin');
+          }
         }
+      } else {
+        localStorage.removeItem('isAdmin');
       }
     });
     return () => unsubscribeAuth();

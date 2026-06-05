@@ -186,13 +186,19 @@ export default function AdminDashboard() {
           if (isDefaultAdmin || (userData && userData.role === 'admin')) {
             setIsAdmin(true);
           } else {
+            localStorage.removeItem('isAdmin');
             navigate('/login');
           }
         } catch (error) {
-          if (isDefaultAdmin) setIsAdmin(true);
-          else navigate('/login');
+          if (isDefaultAdmin) {
+            setIsAdmin(true);
+          } else {
+            localStorage.removeItem('isAdmin');
+            navigate('/login');
+          }
         }
       } else {
+        localStorage.removeItem('isAdmin');
         navigate('/login');
       }
       setLoading(false);

@@ -202,6 +202,124 @@ app.put('/api/content/:id', (req, res) => {
   });
 });
 
+// Helper to hash password
+function hashPassword(password) {
+  return crypto.createHash('sha256').update(password).digest('hex');
+}
+
+// ----------------------------------------------------
+// Authentication API (SQLite)
+// ----------------------------------------------------
+app.post('/api/auth/signup', (req, res) => {
+  const { email, password, displayName, phoneNumber } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+
+  const emailLower = email.toLowerCase();
+  
+  // Check if user already exists
+  db.get('SELECT * FROM users WHERE LOWER(email) = ?', [emailLower], (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (row) return res.status(400).json({ error: 'Email already in use' });
+
+    const uid = crypto.randomUUID();
+    const hashedPassword = hashPassword(password);
+    const role = (emailLower === 'admin@hng.com' || emailLower === 'kimsabin71@gmail.com') ? 'admin' : 'user';
+    const createdAt = new Date().toISOString();
+
+    const sql = `INSERT INTO users (uid, email, password, displayName, phoneNumber, role, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+    db.run(sql, [uid, email, hashedPassword, displayName || email.split('@')[0], phoneNumber || '', role, createdAt], function(insertErr) {
+      if (insertErr) return res.status(500).json({ error: insertErr.message });
+      res.json({ uid, email, displayName, role, createdAt });
+    });
+  });
+});
+
+app.post('/api/auth/login', (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+
+  const emailLower = email.toLowerCase();
+  db.get('SELECT * FROM users WHERE LOWER(email) = ?', [emailLower], (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!row) return res.status(400).json({ error: 'User not found' });
+
+    const hashedPassword = hashPassword(password);
+    
+    // Auto-initialize password for migrated users whose password field is NULL in SQLite
+    if (row.password === null || row.password === '') {
+      db.run('UPDATE users SET password = ? WHERE uid = ?', [hashedPassword, row.uid], (updateErr) => {
+        if (updateErr) console.error("Error setting password for migrated user:", updateErr);
+      });
+      row.password = hashedPassword;
+    }
+
+    if (row.password !== hashedPassword) {
+      return res.status(400).json({ error: 'Invalid password' });
+    }
+
+    res.json({
+      uid: row.uid,
+      email: row.email,
+      displayName: row.displayName,
+      phoneNumber: row.phoneNumber,
+      role: row.role,
+      createdAt: row.createdAt
+    });
+  });
+});
+
+app.post('/api/auth/change-password', (req, res) => {
+  const { uid, currentPassword, newPassword } = req.body;
+  if (!uid || !newPassword) {
+    return res.status(400).json({ error: 'UID and new password are required' });
+  }
+
+  db.get('SELECT * FROM users WHERE uid = ?', [uid], (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!row) return res.status(404).json({ error: 'User not found' });
+
+    // Verify current password if provided
+    if (currentPassword) {
+      const currentHashed = hashPassword(currentPassword);
+      if (row.password !== currentHashed) {
+        return res.status(400).json({ error: 'Invalid current password' });
+      }
+    }
+
+    const newHashed = hashPassword(newPassword);
+    db.run('UPDATE users SET password = ?, updatedAt = CURRENT_TIMESTAMP WHERE uid = ?', [newHashed, uid], function(updateErr) {
+      if (updateErr) return res.status(500).json({ error: updateErr.message });
+      res.json({ success: true });
+    });
+  });
+});
+
+app.post('/api/auth/delete-account', (req, res) => {
+  const { uid } = req.body;
+  if (!uid) {
+    return res.status(400).json({ error: 'UID is required' });
+  }
+
+  db.run('DELETE FROM users WHERE uid = ?', [uid], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true });
+  });
+});
+
+app.post('/api/auth/reset-password', (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ error: 'Email is required' });
+  }
+
+  // Simulate sending reset email
+  res.json({ success: true, message: 'Password reset link sent' });
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Backend API Server running on port ${PORT}`);

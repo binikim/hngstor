@@ -218,7 +218,7 @@ export default function SignupPage() {
       if (error.code === 'auth/email-already-in-use') {
         alert('이미 사용 중인 이메일입니다.');
       } else {
-        alert('회원가입 중 오류가 발생했습니다.');
+        alert(`회원가입 중 오류가 발생했습니다: ${error.message || error}`);
       }
     } finally {
       setLoading(false);
