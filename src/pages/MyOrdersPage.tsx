@@ -102,7 +102,8 @@ export default function MyOrdersPage() {
   const handleDeleteAccount = async () => {
     if (!user) return;
 
-    if (user.email === 'kimsabin71@gmail.com' || user.email === 'admin@hng.com') {
+    const defaultAdminEmail = (import.meta.env.VITE_ADMIN_EMAIL || 'admin@hng.com').toLowerCase();
+    if (user.email?.toLowerCase() === defaultAdminEmail) {
       alert('관리자 계정은 탈퇴할 수 없습니다. 관리자 페이지에서 관리해 주세요.');
       return;
     }

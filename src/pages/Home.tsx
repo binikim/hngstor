@@ -257,7 +257,8 @@ export default function Home() {
       if (currentUser) {
         try {
           const emailLower = currentUser.email?.toLowerCase();
-          const isDefaultAdmin = emailLower === 'kimsabin71@gmail.com' || emailLower === 'admin@hng.com';
+          const defaultAdminEmail = (import.meta.env.VITE_ADMIN_EMAIL || 'admin@hng.com').toLowerCase();
+          const isDefaultAdmin = emailLower === defaultAdminEmail;
           
           const userRef = doc(db, 'users', currentUser.uid);
           const userSnap = await getDoc(userRef);
@@ -272,7 +273,8 @@ export default function Home() {
         } catch (error) {
           console.error("Home auth check error:", error);
           const emailLower = currentUser.email?.toLowerCase();
-          const isDefaultAdmin = emailLower === 'kimsabin71@gmail.com' || emailLower === 'admin@hng.com';
+          const defaultAdminEmail = (import.meta.env.VITE_ADMIN_EMAIL || 'admin@hng.com').toLowerCase();
+          const isDefaultAdmin = emailLower === defaultAdminEmail;
           if (isDefaultAdmin) {
             localStorage.setItem('isAdmin', 'true');
           } else {

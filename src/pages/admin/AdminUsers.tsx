@@ -93,8 +93,9 @@ export default function AdminUsers() {
   };
 
   const handleDeleteUser = async (userId: string, userEmail: string) => {
-    if (userEmail === 'admin@hng.com') {
-      alert('시스템 마스터 관리자 계정(admin@hng.com)은 삭제할 수 없습니다.');
+    const defaultAdminEmail = (import.meta.env.VITE_ADMIN_EMAIL || 'admin@hng.com').toLowerCase();
+    if (userEmail?.toLowerCase() === defaultAdminEmail) {
+      alert(`시스템 마스터 관리자 계정(${defaultAdminEmail})은 삭제할 수 없습니다.`);
       return;
     }
 

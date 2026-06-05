@@ -122,7 +122,8 @@ export default function AdminSettings() {
           const userData = d.data();
           const isCurrentAdmin = d.id === auth.currentUser?.uid;
           const isAdminRole = userData.role === 'admin';
-          const isProtectedEmail = userData.email?.toLowerCase() === 'kimsabin71@gmail.com' || userData.email?.toLowerCase() === 'admin@hng.com';
+          const defaultAdminEmail = (import.meta.env.VITE_ADMIN_EMAIL || 'admin@hng.com').toLowerCase();
+          const isProtectedEmail = userData.email?.toLowerCase() === defaultAdminEmail;
           
           return !(isCurrentAdmin || isAdminRole || isProtectedEmail);
         })

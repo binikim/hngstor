@@ -2,6 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import db from './db.js';
 import crypto from 'crypto';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const app = express();
 app.use(cors());
@@ -225,7 +228,8 @@ app.post('/api/auth/signup', (req, res) => {
 
     const uid = crypto.randomUUID();
     const hashedPassword = hashPassword(password);
-    const role = (emailLower === 'admin@hng.com' || emailLower === 'kimsabin71@gmail.com') ? 'admin' : 'user';
+    const defaultAdminEmail = (process.env.VITE_ADMIN_EMAIL || 'admin@hng.com').toLowerCase();
+    const role = (emailLower === defaultAdminEmail) ? 'admin' : 'user';
     const createdAt = new Date().toISOString();
 
     const sql = `INSERT INTO users (uid, email, password, displayName, phoneNumber, role, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)`;

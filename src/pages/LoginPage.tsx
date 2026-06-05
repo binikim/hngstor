@@ -28,7 +28,8 @@ export default function LoginPage() {
       if (user && isMounted) {
         try {
           const emailLower = user.email?.toLowerCase();
-          const isDefaultAdmin = emailLower === 'kimsabin71@gmail.com' || emailLower === 'admin@hng.com';
+          const defaultAdminEmail = (import.meta.env.VITE_ADMIN_EMAIL || 'admin@hng.com').toLowerCase();
+          const isDefaultAdmin = emailLower === defaultAdminEmail;
           
           const userRef = doc(db, 'users', user.uid);
           const userSnap = await getDoc(userRef);
@@ -64,7 +65,8 @@ export default function LoginPage() {
   const handleLoginSuccess = async (user: any) => {
     try {
       const emailLower = user.email?.toLowerCase();
-      const isDefaultAdmin = emailLower === 'kimsabin71@gmail.com' || emailLower === 'admin@hng.com';
+      const defaultAdminEmail = (import.meta.env.VITE_ADMIN_EMAIL || 'admin@hng.com').toLowerCase();
+      const isDefaultAdmin = emailLower === defaultAdminEmail;
       
       const userRef = doc(db, 'users', user.uid);
       let userSnap;

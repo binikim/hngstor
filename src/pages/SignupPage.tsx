@@ -199,7 +199,8 @@ export default function SignupPage() {
 
       // Create user document in Firestore
       const emailLower = user.email?.toLowerCase();
-      const isDefaultAdmin = emailLower === 'admin@hng.com' || emailLower === 'kimsabin71@gmail.com';
+      const defaultAdminEmail = (import.meta.env.VITE_ADMIN_EMAIL || 'admin@hng.com').toLowerCase();
+      const isDefaultAdmin = emailLower === defaultAdminEmail;
       await setDoc(doc(db, 'users', user.uid), {
         uid: user.uid,
         email: user.email,
