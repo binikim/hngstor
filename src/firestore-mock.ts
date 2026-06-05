@@ -25,7 +25,16 @@ export const getDoc = async (ref: any) => {
     const res = await fetch(`${API_BASE}/content/${id}`);
     if (!res.ok) return { exists: () => false, data: () => null, id };
     const data = await res.json();
-    return { exists: () => true, data: () => ({ content: data.content }), id };
+    
+    const contentObj = (typeof data.content === 'object' && data.content !== null && !Array.isArray(data.content))
+      ? { ...data.content }
+      : { content: data.content };
+      
+    if (contentObj.updatedAt && typeof contentObj.updatedAt === 'string') {
+      contentObj.updatedAt = Timestamp.fromDate(new Date(contentObj.updatedAt));
+    }
+    
+    return { exists: () => true, data: () => contentObj, id };
   }
 
   const res = await fetch(`${API_BASE}/${collectionName}/${id}`);
