@@ -64,10 +64,17 @@ export default function CheckoutPage() {
   });
 
   const [isSameAsOrderer, setIsSameAsOrderer] = useState(false);
+  
+  // Bank Info state
+  const [bankInfo, setBankInfo] = useState({
+    bankName: '신한은행',
+    accountNumber: '110-523-123456',
+    accountHolder: 'H&G Stoa'
+  });
 
-  // Auto-fill orderer info when auth state changes
+  // Auto-fill orderer info and fetch bank info when auth state changes
   React.useEffect(() => {
-    async function fetchUserInfo() {
+    async function fetchUserInfoAndBank() {
       if (auth.currentUser) {
         let phone = '';
         try {
@@ -85,8 +92,21 @@ export default function CheckoutPage() {
           ordererPhone: prev.ordererPhone || phone || ''
         }));
       }
+
+      try {
+        const bankDoc = await getDoc(doc(db, 'siteContent', 'bank'));
+        if (bankDoc.exists() && bankDoc.data().content) {
+          setBankInfo({
+            bankName: bankDoc.data().content.bankName || '신한은행',
+            accountNumber: bankDoc.data().content.accountNumber || '110-523-123456',
+            accountHolder: bankDoc.data().content.accountHolder || 'H&G Stoa'
+          });
+        }
+      } catch (e) {
+        console.error("Error fetching bank info", e);
+      }
     }
-    fetchUserInfo();
+    fetchUserInfoAndBank();
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -712,16 +732,16 @@ export default function CheckoutPage() {
             <div className="bg-surface-container-low p-6 rounded-2xl border border-outline-variant/10 space-y-4">
               <div className="flex justify-between items-center text-sm">
                 <span className="text-on-surface-variant font-medium">입금 은행</span>
-                <span className="font-bold text-on-surface">신한은행</span>
+                <span className="font-bold text-on-surface">{bankInfo.bankName}</span>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-on-surface-variant font-medium">계좌 번호</span>
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-on-surface">110-523-123456</span>
+                  <span className="font-bold text-on-surface">{bankInfo.accountNumber}</span>
                   <button 
                     type="button"
                     onClick={() => {
-                      navigator.clipboard.writeText('110-523-123456');
+                      navigator.clipboard.writeText(bankInfo.accountNumber);
                       alert('계좌번호가 복사되었습니다.');
                     }}
                     className="text-xs text-primary font-bold hover:underline"
@@ -732,7 +752,7 @@ export default function CheckoutPage() {
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-on-surface-variant font-medium">예금주</span>
-                <span className="font-bold text-on-surface">H&G Stoa</span>
+                <span className="font-bold text-on-surface">{bankInfo.accountHolder}</span>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-on-surface-variant font-medium">입금 금액</span>

@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { db, handleFirestoreError, OperationType } from '../../firebase';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { motion } from 'motion/react';
-import { Save, Info, Plus, Trash2, HelpCircle, FileText, Shield, FileCheck, MessageCircle, LayoutDashboard, Building2, Grid, MoveUp, MoveDown, Upload } from 'lucide-react';
+import { Save, Info, Plus, Trash2, HelpCircle, FileText, Shield, FileCheck, MessageCircle, LayoutDashboard, Building2, Grid, MoveUp, MoveDown, Upload, CreditCard } from 'lucide-react';
 
 interface SiteContent {
   id: string;
@@ -20,6 +20,7 @@ const PAGE_KEYS = [
   { id: 'home', label: '메인 페이지', icon: LayoutDashboard },
   { id: 'categories', label: '카테고리 관리', icon: Grid },
   { id: 'footer', label: '하단 정보 (푸터)', icon: Building2 },
+  { id: 'bank', label: '무통장 정보 변경', icon: CreditCard },
   { id: 'info', label: '정보 페이지 (회사/약관)', icon: Info },
   { id: 'support', label: '고객센터 (FAQ/문의)', icon: HelpCircle },
 ];
@@ -62,6 +63,12 @@ export default function AdminContent() {
         phone: '',
         address: '',
         extraFields: []
+      });
+    } else if (activePage === 'bank') {
+      setContent({
+        bankName: '',
+        accountNumber: '',
+        accountHolder: ''
       });
     } else {
       setContent('');
@@ -127,10 +134,17 @@ export default function AdminContent() {
               featuredProductIds: [],
               ...data.content
             };
+          } else if (activePage === 'bank') {
+            mergedContent = {
+              bankName: '신한은행',
+              accountNumber: '110-523-123456',
+              accountHolder: 'H&G Stoa',
+              ...data.content
+            };
           }
           
           setContent(mergedContent);
-          setTitle(data.title || '');
+          setTitle(data.title || '무통장 정보 변경');
         } else {
           // Provide defaults if not exists
           let defaultContent: any = '';
@@ -165,6 +179,12 @@ export default function AdminContent() {
             phone: '00-000-0000',
             address: '서울특별시',
             extraFields: []
+          };
+        } else if (activePage === 'bank') {
+          defaultContent = {
+            bankName: '신한은행',
+            accountNumber: '110-523-123456',
+            accountHolder: 'H&G Stoa'
           };
         }
         
@@ -880,6 +900,39 @@ export default function AdminContent() {
                       </motion.div>
                     ))}
                   </div>
+                </div>
+              </div>
+            ) : activePage === 'bank' ? (
+              <div className="space-y-6">
+                <div className="space-y-4 p-6 bg-surface-container-lowest rounded-2xl border border-outline-variant/5">
+                  <h3 className="font-bold text-on-surface">입금 은행</h3>
+                  <input 
+                    type="text"
+                    value={content?.bankName || ''}
+                    onChange={(e) => setContent({ ...content, bankName: e.target.value })}
+                    className="w-full bg-transparent border border-outline-variant/10 rounded-xl py-4 px-4 focus:ring-1 focus:ring-primary text-sm leading-relaxed"
+                    placeholder="신한은행"
+                  />
+                </div>
+                <div className="space-y-4 p-6 bg-surface-container-lowest rounded-2xl border border-outline-variant/5">
+                  <h3 className="font-bold text-on-surface">계좌 번호</h3>
+                  <input 
+                    type="text"
+                    value={content?.accountNumber || ''}
+                    onChange={(e) => setContent({ ...content, accountNumber: e.target.value })}
+                    className="w-full bg-transparent border border-outline-variant/10 rounded-xl py-4 px-4 focus:ring-1 focus:ring-primary text-sm leading-relaxed font-mono"
+                    placeholder="110-523-123456"
+                  />
+                </div>
+                <div className="space-y-4 p-6 bg-surface-container-lowest rounded-2xl border border-outline-variant/5">
+                  <h3 className="font-bold text-on-surface">예금주</h3>
+                  <input 
+                    type="text"
+                    value={content?.accountHolder || ''}
+                    onChange={(e) => setContent({ ...content, accountHolder: e.target.value })}
+                    className="w-full bg-transparent border border-outline-variant/10 rounded-xl py-4 px-4 focus:ring-1 focus:ring-primary text-sm leading-relaxed"
+                    placeholder="H&G Stoa"
+                  />
                 </div>
               </div>
             ) : activePage === 'info' ? (
