@@ -10,7 +10,17 @@ import { ShoppingCart, Lock } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { auth, db } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
+
+interface Product {
+  id: string;
+  category: string;
+  name: string;
+  price: number;
+  image: string;
+  badge?: string;
+  badgeColor?: string;
+}
 
 const CATEGORY_DATA: Record<string, { title: string; description: string; image: string }> = {
   men: {
@@ -60,12 +70,44 @@ const CATEGORY_DATA: Record<string, { title: string; description: string; image:
   }
 };
 
+const matchCategory = (productCat: string, categoryTitle: string): boolean => {
+  const pCat = productCat || '';
+  const cTitle = categoryTitle || '';
+
+  if (cTitle.includes('보조')) {
+    if (cTitle.includes('남성')) {
+      return pCat.includes('남성') && pCat.includes('보조');
+    }
+    if (cTitle.includes('여성')) {
+      return pCat.includes('여성') && pCat.includes('보조');
+    }
+  }
+
+  if (cTitle.includes('남성')) {
+    return pCat.includes('남성') && !pCat.includes('보조');
+  }
+
+  if (cTitle.includes('여성')) {
+    return pCat.includes('여성') && !pCat.includes('보조');
+  }
+
+  if (cTitle.includes('콘돔') && pCat.includes('콘돔')) return true;
+  if (cTitle.includes('러브젤') && pCat.includes('러브젤')) return true;
+  if (cTitle.includes('속옷') && (pCat.includes('속옷') || pCat.includes('란제리'))) return true;
+  if (cTitle.includes('커플') && pCat.includes('커플')) return true;
+  if (cTitle.includes('기타') && pCat.includes('기타')) return true;
+
+  return pCat.includes(cTitle) || cTitle.includes(pCat);
+};
+
 export default function CategoryPage() {
   const { categoryId } = useParams<{ categoryId: string }>();
   const { addToCart } = useCart();
   const [user, setUser] = useState<any>(null);
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [productsLoading, setProductsLoading] = useState(true);
 
   useEffect(() => {
     async function fetchCategory() {
@@ -94,11 +136,33 @@ export default function CategoryPage() {
   }, [categoryId]);
 
   useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'products'));
+        const allProducts = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as Product));
+        setProducts(allProducts);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      } finally {
+        setProductsLoading(false);
+      }
+    }
+    fetchProducts();
+  }, []);
+
+  useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
     });
     return () => unsubscribe();
   }, []);
+
+  const filteredProducts = products.filter(product => 
+    data ? matchCategory(product.category, data.title) : false
+  );
 
   if (loading) {
     return (
@@ -127,9 +191,15 @@ export default function CategoryPage() {
           <img 
             src={data.image} 
             alt={data.title} 
-            className={`w-full h-full object-cover transition-opacity duration-500 opacity-40`}
+            className={`w-full h-full object-cover transition-opacity duration-500 ${!user ? 'blur-3xl opacity-10' : 'opacity-40'}`}
             referrerPolicy="no-referrer"
           />
+          {!user && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40">
+              <Lock className="text-white/20 mb-4" size={48} />
+              <p className="text-white font-bold text-xl">로그인 후 이미지를 확인할 수 있습니다.</p>
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/60 to-background"></div>
         </div>
         <div className="relative z-10 max-w-[1920px] mx-auto px-6 md:px-12 w-full text-center">
@@ -151,41 +221,103 @@ export default function CategoryPage() {
         </div>
       </section>
 
-      {/* Product Grid (Placeholder) */}
+      {/* Product Grid */}
       <section className="max-w-[1920px] mx-auto px-6 md:px-12 py-20">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-            <div key={i} className="group">
-              <div className="relative aspect-[3/4] bg-surface-container-low rounded-2xl overflow-hidden mb-6">
-                  <>
-                    <div className="w-full h-full bg-surface-container-high flex items-center justify-center text-on-surface-variant/20">
-                      <span className="text-4xl font-headline font-bold">{i}</span>
-                    </div>
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <button 
-                        onClick={() => addToCart({
-                          id: `${categoryId}-${i}`,
-                          name: `프리미엄 ${data.title} 제품 ${i}`,
-                          price: (50000 + i * 10000),
-                          image: data.image
-                        })}
-                        className="bg-primary text-on-primary px-6 py-3 rounded-xl font-bold flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform active:scale-95"
-                      >
-                        <ShoppingCart size={18} /> 담기
-                      </button>
-                    </div>
-                  </>
+        {productsLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="animate-pulse">
+                <div className="aspect-[3/4] bg-surface-container-low rounded-2xl mb-6"></div>
+                <div className="h-4 bg-surface-container-low rounded w-1/2 mb-2"></div>
+                <div className="h-6 bg-surface-container-low rounded w-3/4"></div>
               </div>
-              <div className="space-y-2">
-                <p className="text-xs text-on-surface-variant font-medium tracking-wider uppercase">{data.title}</p>
-                <h3 className="text-lg font-headline font-semibold group-hover:text-primary transition-colors leading-tight">
-                  프리미엄 {data.title} 제품 {i}
-                </h3>
-                <p className="text-xl font-bold font-headline text-on-surface">{(50000 + i * 10000).toLocaleString()} KRW</p>
+            ))}
+          </div>
+        ) : filteredProducts.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {filteredProducts.map((product) => (
+              <div key={product.id} className="group">
+                <div className="relative aspect-[3/4] bg-surface-container-low rounded-2xl overflow-hidden mb-6">
+                  {!user ? (
+                    <div className="w-full h-full bg-surface-container-high flex flex-col items-center justify-center p-6 text-center">
+                      <Lock className="text-on-surface-variant/10 mb-4" size={40} />
+                      <p className="text-on-surface-variant/40 text-sm font-bold leading-tight">로그인 시<br/>상품 이미지가 노출됩니다.</p>
+                    </div>
+                  ) : (
+                    <>
+                      <img 
+                        src={product.image} 
+                        alt={product.name} 
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button 
+                          onClick={() => addToCart(product)}
+                          className="bg-primary text-on-primary px-6 py-3 rounded-xl font-bold flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform active:scale-95"
+                        >
+                          <ShoppingCart size={18} /> 담기
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs text-on-surface-variant font-medium tracking-wider uppercase">{product.category}</p>
+                  <h3 className="text-lg font-headline font-semibold group-hover:text-primary transition-colors leading-tight">
+                    {product.name}
+                  </h3>
+                  <p className="text-xl font-bold font-headline text-on-surface">{(product.price || 0).toLocaleString()} KRW</p>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          /* Fallback mock products using data.image */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <div key={i} className="group">
+                <div className="relative aspect-[3/4] bg-surface-container-low rounded-2xl overflow-hidden mb-6">
+                  {!user ? (
+                    <div className="w-full h-full bg-surface-container-high flex flex-col items-center justify-center p-6 text-center">
+                      <Lock className="text-on-surface-variant/10 mb-4" size={40} />
+                      <p className="text-on-surface-variant/40 text-sm font-bold leading-tight">로그인 시<br/>상품 이미지가 노출됩니다.</p>
+                    </div>
+                  ) : (
+                    <>
+                      <img 
+                        src={data.image} 
+                        alt={`프리미엄 ${data.title} 제품 ${i}`} 
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-70"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button 
+                          onClick={() => addToCart({
+                            id: `${categoryId}-${i}`,
+                            name: `프리미엄 ${data.title} 제품 ${i}`,
+                            price: (50000 + i * 10000),
+                            image: data.image
+                          })}
+                          className="bg-primary text-on-primary px-6 py-3 rounded-xl font-bold flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform active:scale-95"
+                        >
+                          <ShoppingCart size={18} /> 담기
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs text-on-surface-variant font-medium tracking-wider uppercase">{data.title}</p>
+                  <h3 className="text-lg font-headline font-semibold group-hover:text-primary transition-colors leading-tight">
+                    프리미엄 {data.title} 제품 {i}
+                  </h3>
+                  <p className="text-xl font-bold font-headline text-on-surface">{(50000 + i * 10000).toLocaleString()} KRW</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
