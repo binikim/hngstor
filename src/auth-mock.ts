@@ -1,5 +1,5 @@
 // Mock of firebase/auth connecting to SQLite backend via REST
-const API_BASE = `http://${window.location.hostname}:3001/api`;
+const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:3001/api`;
 
 export interface User {
   uid: string;
