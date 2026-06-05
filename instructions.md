@@ -141,4 +141,6 @@
 3. **낙관적 업데이트(Optimistic Update) 적용으로 UI 반응성 확보 (`src/pages/admin/AdminOrders.tsx`)**:
    * 로컬 Firestore 모의 라이브러리(`firestore-mock.ts`)의 5초 단위 풀링(polling) 동작으로 인해, 상태 변경 요청 직후 UI가 즉시 구버전 데이터로 롤백 및 복구되는 버그 해결.
    * `handleStatusUpdate` 및 `handleTrackingUpdate` 실행 시 Firestore 비동기 업데이트 완료를 기다리지 않고, 로컬 `orders` 상태를 먼저 수정하는 **낙관적 업데이트(Optimistic Update)** 기법을 선 적용하여 렉 없이 즉각적인 상태 전환이 가능하도록 수정 완료.
-
+4. **드롭다운 비활성화(disabled) 속성 제거 및 Firestore 보안 규칙 복구**:
+   * 주문 상태 업데이트 중 select 엘리먼트에 `disabled` 속성이 부여되면 일부 브라우저 환경에서 change 이벤트 사이클이 중단되어 최종 선택이 복구되거나 씹히는 브라우저 네이티브 버그를 방지하기 위해 `disabled={updatingId === order.id}` 속성을 select 태그에서 제거했습니다.
+   * 실서버(Vercel 프로덕션) 환경에서 Firebase Cloud Firestore에 주문 상태 변경을 기록할 때, 쓰기 권한이 막혀 있던 `firestore.rules` 규칙을 수정하여 `allow read, write: if true;`로 복구하여 배포했습니다.

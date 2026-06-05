@@ -199,7 +199,6 @@ export default function AdminOrders() {
                   <div className="relative" onClick={(e) => e.stopPropagation()}>
                     <select 
                       value={order.status}
-                      disabled={updatingId === order.id}
                       onChange={(e) => handleStatusUpdate(order.id, e.target.value)}
                       className={`text-[10px] font-bold uppercase px-3 py-1.5 rounded-full border-none focus:ring-1 focus:ring-primary cursor-pointer transition-all text-stone-900 ${
                         order.status === 'delivered' ? 'bg-success/10' : 
