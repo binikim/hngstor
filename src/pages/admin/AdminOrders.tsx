@@ -52,6 +52,18 @@ const formatPhoneNumber = (phone: string | undefined) => {
   return phone;
 };
 
+const getStatusLabel = (status: string) => {
+  const mapping: Record<string, string> = {
+    ordered: '결제완료',
+    pending: '입금대기',
+    processing: '배송준비중',
+    shipped: '배송중',
+    delivered: '배송완료',
+    cancelled: '주문취소'
+  };
+  return mapping[status] || status;
+};
+
 export default function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,6 +86,11 @@ export default function AdminOrders() {
 
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     setUpdatingId(orderId);
+    setOrders(prevOrders => 
+      prevOrders.map(order => 
+        order.id === orderId ? { ...order, status: newStatus } : order
+      )
+    );
     try {
       await updateDoc(doc(db, 'orders', orderId), { status: newStatus });
       setSuccessId(orderId);
@@ -87,6 +104,11 @@ export default function AdminOrders() {
 
   const handleTrackingUpdate = async (orderId: string, company: string, number: string) => {
     setUpdatingId(orderId);
+    setOrders(prevOrders => 
+      prevOrders.map(order => 
+        order.id === orderId ? { ...order, deliveryCompany: company, trackingNumber: number, status: 'shipped' } : order
+      )
+    );
     try {
       await updateDoc(doc(db, 'orders', orderId), { 
         deliveryCompany: company,
@@ -174,11 +196,10 @@ export default function AdminOrders() {
                 </div>
 
                 <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0">
-                  <div className="relative">
+                  <div className="relative" onClick={(e) => e.stopPropagation()}>
                     <select 
                       value={order.status}
                       disabled={updatingId === order.id}
-                      onClick={(e) => e.stopPropagation()}
                       onChange={(e) => handleStatusUpdate(order.id, e.target.value)}
                       className={`text-[10px] font-bold uppercase px-3 py-1.5 rounded-full border-none focus:ring-1 focus:ring-primary cursor-pointer transition-all text-stone-900 ${
                         order.status === 'delivered' ? 'bg-success/10' : 
@@ -188,9 +209,11 @@ export default function AdminOrders() {
                         'bg-primary/10'
                       }`}
                     >
+                      {order.status === 'pending' && (
+                        <option value="pending" className="text-stone-900 bg-white">입금대기</option>
+                      )}
                       <option value="ordered" className="text-stone-900 bg-white">결제완료</option>
-                      <option value="pending" className="text-stone-900 bg-white">준비중</option>
-                      <option value="processing" className="text-stone-900 bg-white">배송준비</option>
+                      <option value="processing" className="text-stone-900 bg-white">배송준비중</option>
                       <option value="shipped" className="text-stone-900 bg-white">배송중</option>
                       <option value="delivered" className="text-stone-900 bg-white">배송완료</option>
                     </select>

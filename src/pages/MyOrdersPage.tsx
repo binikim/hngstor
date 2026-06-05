@@ -57,6 +57,18 @@ const formatPhoneNumber = (phone: string | undefined) => {
   return phone;
 };
 
+const getStatusLabel = (status: string) => {
+  const mapping: Record<string, string> = {
+    ordered: '결제완료',
+    pending: '입금대기',
+    processing: '배송준비중',
+    shipped: '배송중',
+    delivered: '배송완료',
+    cancelled: '주문취소'
+  };
+  return mapping[status] || status;
+};
+
 export default function MyOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -213,7 +225,7 @@ export default function MyOrdersPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="bg-primary/10 text-primary px-4 py-1.5 rounded-full text-xs font-bold">
-                      {order.status === 'ordered' ? '결제완료' : order.status}
+                      {getStatusLabel(order.status)}
                     </span>
                     <button className="text-on-surface-variant hover:text-primary transition-colors">
                       <ChevronRight size={20} />

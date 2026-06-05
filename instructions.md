@@ -114,3 +114,31 @@
    * 마운트 시 `siteContent/bank` 문서를 비동기로 조회해 `bankInfo` 로컬 상태에 캐싱함.
    * 무통장 입금 완료 안내 모달(Cash Modal)에 표기되는 입금 은행, 계좌 번호, 예금주 정보를 하드코딩 대신 위에서 받아온 `bankInfo` 정보로 변경.
    * 텍스트 복사 버튼 클릭 시에도 동적으로 호출된 계좌번호가 정확히 클립보드에 복사되도록 핸들러 연동.
+
+---
+
+## 8. 고객 주문 내역 상태 한국어 번역 및 관리자 상태 변경 지연 개선
+
+### 요구사항
+1. 마이페이지 주문 내역에서 주문 상태가 영어(ordered, processing, shipped, delivered 등)로 나오는 문제를 해결하고 한국어로 번역해서 노출.
+2. 관리자 주문 관리 화면에서 주문 상태(배송준비중, 배송중, 배송완료 등) 변경 시, 변경이 되지 않고 이전 값으로 즉시 돌아가버리는 지연/UI 롤백 오류 해결.
+3. 관리자 주문 관리의 선택 옵션에서 '준비중(pending)' 선택지를 삭제하고, '배송준비중(processing)', '배송중(shipped)', '배송완료(delivered)' 등으로 구성하되, 기존 '입금대기(pending)' 상태의 주문이 있을 경우에만 '입금대기' 옵션이 임시 표시되도록 구성.
+
+### 해결 방안 및 지침
+1. **고객 페이지 주문 상태 한국어 매핑 (`src/pages/MyOrdersPage.tsx`)**:
+   * `getStatusLabel` 헬퍼 함수를 추가하여 영어 상태 문자열을 한국어 라벨로 매핑:
+     * `ordered` ➔ `결제완료`
+     * `pending` ➔ `입금대기`
+     * `processing` ➔ `배송준비중`
+     * `shipped` ➔ `배송중`
+     * `delivered` ➔ `배송완료`
+     * `cancelled` ➔ `주문취소`
+   * 고객 주문 내역 아이템들의 상태 표시 영역에 `getStatusLabel(order.status)`를 바인딩하여 동적으로 출력하도록 개선.
+2. **관리자 주문 상태 옵션 정리 (`src/pages/admin/AdminOrders.tsx`)**:
+   * 주문 상태 선택 박스(`<select>`)에서 `pending` 상태인 '준비중' 옵션을 영구 제거.
+   * 현재 주문이 `pending` 상태인 경우에만 예외적으로 '입금대기' 옵션이 노출되도록 조건부 렌더링 적용.
+   * '배송준비' 텍스트를 '배송준비중'으로 명칭 통일 및 한국어 매핑 함수 적용.
+3. **낙관적 업데이트(Optimistic Update) 적용으로 UI 반응성 확보 (`src/pages/admin/AdminOrders.tsx`)**:
+   * 로컬 Firestore 모의 라이브러리(`firestore-mock.ts`)의 5초 단위 풀링(polling) 동작으로 인해, 상태 변경 요청 직후 UI가 즉시 구버전 데이터로 롤백 및 복구되는 버그 해결.
+   * `handleStatusUpdate` 및 `handleTrackingUpdate` 실행 시 Firestore 비동기 업데이트 완료를 기다리지 않고, 로컬 `orders` 상태를 먼저 수정하는 **낙관적 업데이트(Optimistic Update)** 기법을 선 적용하여 렉 없이 즉각적인 상태 전환이 가능하도록 수정 완료.
+
