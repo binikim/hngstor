@@ -10,6 +10,21 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import Markdown from 'react-markdown';
 
+const scopeHtml = (html: string) => {
+  if (!html) return html;
+  return html.replace(/<style>([\s\S]*?)<\/style>/gi, (match, css) => {
+    let scopedCss = css;
+    scopedCss = scopedCss.replace(/\bbody\b/g, '.markdown-body');
+    scopedCss = scopedCss.replace(/\bhtml\b/g, '.markdown-body');
+    const tags = ['h1', 'h2', 'p', 'ul', 'li', 'table', 'th', 'td', 'a', 'strong'];
+    tags.forEach(tag => {
+      const regex = new RegExp(`(^|\\s|\\,|\\{)(${tag})([\\s\\,\\{])`, 'g');
+      scopedCss = scopedCss.replace(regex, `$1.markdown-body $2$3`);
+    });
+    return `<style>${scopedCss}</style>`;
+  });
+};
+
 export default function TermsPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -58,7 +73,7 @@ export default function TermsPage() {
 
         <div className="space-y-10 text-on-surface-variant leading-relaxed">
           {data ? (
-            <div className="markdown-body" dangerouslySetInnerHTML={{ __html: data.content }} />
+            <div className="markdown-body" dangerouslySetInnerHTML={{ __html: scopeHtml(data.content) }} />
           ) : (
             <>
               <section>
