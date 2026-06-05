@@ -155,8 +155,8 @@ export default function AdminOrders() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: Order List (col-span-5) */}
-        <div className="lg:col-span-5 space-y-4 max-h-[calc(100vh-280px)] overflow-y-auto pr-2">
+        {/* Left Column: Order List (col-span-4 / col-span-3 on xl) */}
+        <div className="lg:col-span-4 xl:col-span-3 space-y-4 max-h-[calc(100vh-280px)] overflow-y-auto pr-2">
           {filteredOrders.length === 0 ? (
             <div className="bg-surface-container-low rounded-2xl p-12 text-center text-on-surface-variant border border-outline-variant/10">
               {selectedDate ? '선택하신 날짜에 주문 내역이 없습니다.' : '주문 내역이 없습니다.'}
@@ -210,8 +210,8 @@ export default function AdminOrders() {
           )}
         </div>
 
-        {/* Right Column: Selected Order Details (col-span-7) */}
-        <div className="lg:col-span-7">
+        {/* Right Column: Selected Order Details (col-span-8 / col-span-9 on xl) */}
+        <div className="lg:col-span-8 xl:col-span-9">
           {selectedOrder ? (
             <div className="bg-surface-container-low rounded-3xl border border-outline-variant/10 p-6 md:p-8 space-y-6 sticky top-24 shadow-sm">
               {/* Header: ID & Status Change dropdown */}
