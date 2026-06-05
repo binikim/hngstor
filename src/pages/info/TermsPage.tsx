@@ -16,7 +16,10 @@ const scopeHtml = (html: string) => {
     let scopedCss = css;
     scopedCss = scopedCss.replace(/\bbody\b/g, '.markdown-body');
     scopedCss = scopedCss.replace(/\bhtml\b/g, '.markdown-body');
-    const tags = ['h1', 'h2', 'p', 'ul', 'li', 'table', 'th', 'td', 'a', 'strong'];
+    const tags = [
+      'h1', 'h2', 'p', 'ul', 'ol', 'li', 'table', 'th', 'td', 'a', 'strong',
+      'footer', 'header', 'section', 'nav'
+    ];
     tags.forEach(tag => {
       const regex = new RegExp(`(^|\\s|\\,|\\{)(${tag})([\\s\\,\\{])`, 'g');
       scopedCss = scopedCss.replace(regex, `$1.markdown-body $2$3`);
