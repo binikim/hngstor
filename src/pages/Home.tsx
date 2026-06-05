@@ -289,6 +289,13 @@ export default function Home() {
   }, []);
 
   // Removed duplicate useEffect for products
+  const filteredProducts = products.filter(product => {
+    if (activeFilter === "전체") return true;
+    if (activeFilter === "베스트셀러") return product.badge === "HOT" || product.badge === "BEST";
+    if (activeFilter === "한정수량") return product.badge === "LIMITED";
+    if (activeFilter === "특가상품") return !product.badge || product.badge === "SALE" || product.badge === "SPECIAL";
+    return true;
+  });
 
   return (
     <div>
@@ -305,7 +312,14 @@ export default function Home() {
               {homeContent?.categoriesTitle || '베스트 카테고리'}
             </h2>
           </div>
-          <button className="group text-primary font-bold flex items-center gap-2 hover:translate-x-2 transition-transform">
+          <button 
+            onClick={() => {
+              if (categoriesData.length > 0) {
+                navigate(categoriesData[0].path);
+              }
+            }}
+            className="group text-primary font-bold flex items-center gap-2 hover:translate-x-2 transition-transform"
+          >
             전체보기 <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
@@ -350,14 +364,21 @@ export default function Home() {
               </div>
             ))
           ) : (
-            products.map((product) => (
+            filteredProducts.map((product) => (
               <ProductCard key={product.id} product={product} isLoggedIn={!!user} />
             ))
           )}
         </div>
 
         <div className="mt-20 text-center">
-          <button className="group px-10 py-4 border border-outline-variant/20 rounded-xl font-bold hover:bg-surface-container-low transition-all flex items-center gap-3 mx-auto">
+          <button 
+            onClick={() => {
+              if (categoriesData.length > 0) {
+                navigate(categoriesData[0].path);
+              }
+            }}
+            className="group px-10 py-4 border border-outline-variant/20 rounded-xl font-bold hover:bg-surface-container-low transition-all flex items-center gap-3 mx-auto"
+          >
             더 많은 제품 보기 <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
