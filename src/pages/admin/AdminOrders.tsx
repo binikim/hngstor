@@ -180,19 +180,19 @@ export default function AdminOrders() {
                       disabled={updatingId === order.id}
                       onClick={(e) => e.stopPropagation()}
                       onChange={(e) => handleStatusUpdate(order.id, e.target.value)}
-                      className={`text-[10px] font-bold uppercase px-3 py-1.5 rounded-full border-none focus:ring-1 focus:ring-primary cursor-pointer transition-all ${
-                        order.status === 'delivered' ? 'bg-success/10 text-success' : 
-                        order.status === 'shipped' ? 'bg-info/10 text-info' : 
-                        order.status === 'processing' ? 'bg-warning/10 text-warning' :
-                        order.status === 'pending' ? 'bg-secondary/10 text-secondary' :
-                        'bg-primary/10 text-primary'
+                      className={`text-[10px] font-bold uppercase px-3 py-1.5 rounded-full border-none focus:ring-1 focus:ring-primary cursor-pointer transition-all text-stone-900 ${
+                        order.status === 'delivered' ? 'bg-success/10' : 
+                        order.status === 'shipped' ? 'bg-info/10' : 
+                        order.status === 'processing' ? 'bg-warning/10' :
+                        order.status === 'pending' ? 'bg-secondary/10' :
+                        'bg-primary/10'
                       }`}
                     >
-                      <option value="ordered">결제완료</option>
-                      <option value="pending">준비중</option>
-                      <option value="processing">배송준비</option>
-                      <option value="shipped">배송중</option>
-                      <option value="delivered">배송완료</option>
+                      <option value="ordered" className="text-stone-900 bg-white">결제완료</option>
+                      <option value="pending" className="text-stone-900 bg-white">준비중</option>
+                      <option value="processing" className="text-stone-900 bg-white">배송준비</option>
+                      <option value="shipped" className="text-stone-900 bg-white">배송중</option>
+                      <option value="delivered" className="text-stone-900 bg-white">배송완료</option>
                     </select>
                     {updatingId === order.id && (
                       <div className="absolute -right-6 top-1/2 -translate-y-1/2">
