@@ -144,3 +144,7 @@
 4. **드롭다운 비활성화(disabled) 속성 제거 및 Firestore 보안 규칙 복구**:
    * 주문 상태 업데이트 중 select 엘리먼트에 `disabled` 속성이 부여되면 일부 브라우저 환경에서 change 이벤트 사이클이 중단되어 최종 선택이 복구되거나 씹히는 브라우저 네이티브 버그를 방지하기 위해 `disabled={updatingId === order.id}` 속성을 select 태그에서 제거했습니다.
    * 실서버(Vercel 프로덕션) 환경에서 Firebase Cloud Firestore에 주문 상태 변경을 기록할 때, 쓰기 권한이 막혀 있던 `firestore.rules` 규칙을 수정하여 `allow read, write: if true;`로 복구하여 배포했습니다.
+5. **이벤트 전파 중단(stopPropagation) 대신 타겟 체크 방식 전환**:
+   * 기존에는 select 태그 주변의 wrapper `div`에 `onClick={(e) => e.stopPropagation()}`를 걸어 아코디언 토글을 막았으나, 이 방식이 브라우저에 따라 select와 option 클릭 시의 포커스나 버블링 과정을 간섭하여 상태 값 변경(`onChange`)을 방해하는 부작용이 발견되었습니다.
+   * 이에 따라 select를 싸고 있던 wrapper `div`의 stopPropagation 설정을 완전 삭제하고, 대신 아코디언 헤더의 `onClick` 이벤트 핸들러 자체에서 `(e.target as HTMLElement).closest('select')` 검사를 하도록 리팩토링했습니다. 이로써 이벤트 전파의 왜곡 없이 네이티브 select 드롭다운 선택 동작이 100% 정상 작동하도록 조치했습니다.
+

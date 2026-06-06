@@ -172,7 +172,12 @@ export default function AdminOrders() {
               {/* Order Summary Header */}
               <div 
                 className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer hover:bg-surface-container-high/30 transition-colors"
-                onClick={() => setExpandedOrderId(expandedOrderId === order.id ? null : order.id)}
+                onClick={(e) => {
+                  if ((e.target as HTMLElement).closest('select')) {
+                    return;
+                  }
+                  setExpandedOrderId(expandedOrderId === order.id ? null : order.id);
+                }}
               >
                 <div className="grid grid-cols-2 gap-x-6 gap-y-2 flex-grow">
                   <div className="space-y-1">
@@ -196,7 +201,7 @@ export default function AdminOrders() {
                 </div>
 
                 <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0">
-                  <div className="relative" onClick={(e) => e.stopPropagation()}>
+                  <div className="relative">
                     <select 
                       value={order.status}
                       onChange={(e) => handleStatusUpdate(order.id, e.target.value)}

@@ -156,9 +156,13 @@ app.post('/api/orders', (req, res) => {
 });
 
 app.put('/api/orders/:id', (req, res) => {
+  console.log(`[Backend] PUT /api/orders/${req.params.id} called with updates:`, req.body);
   const updates = req.body;
   const keys = Object.keys(updates).filter(k => k !== 'id');
-  if (keys.length === 0) return res.json({ success: true });
+  if (keys.length === 0) {
+    console.log("[Backend] No fields to update");
+    return res.json({ success: true });
+  }
   
   const setString = keys.map(k => `${k} = ?`).join(', ');
   const values = keys.map(k => {
@@ -168,8 +172,13 @@ app.put('/api/orders/:id', (req, res) => {
   values.push(req.params.id);
 
   const sql = `UPDATE orders SET ${setString}, updatedAt = CURRENT_TIMESTAMP WHERE id = ?`;
+  console.log("[Backend] Executing SQL:", sql, "with values:", values);
   db.run(sql, values, function(err) {
-    if (err) return res.status(500).json({ error: err.message });
+    if (err) {
+      console.error("[Backend] SQL Error updating order:", err.message);
+      return res.status(500).json({ error: err.message });
+    }
+    console.log(`[Backend] Successfully updated order ${req.params.id}. Rows affected: ${this.changes}`);
     res.json({ success: true });
   });
 });
