@@ -204,11 +204,11 @@ export default function AdminOrders() {
                   <div className="relative">
                     <select 
                       value={order.status}
+                      onClick={(e) => e.stopPropagation()}
                       onChange={(e) => handleStatusUpdate(order.id, e.target.value)}
                       className={`text-[10px] font-bold uppercase px-3 py-1.5 rounded-full border-none focus:ring-1 focus:ring-primary cursor-pointer transition-all text-stone-900 ${
                         order.status === 'delivered' ? 'bg-success/10' : 
                         order.status === 'shipped' ? 'bg-info/10' : 
-                        order.status === 'processing' ? 'bg-warning/10' :
                         order.status === 'pending' ? 'bg-secondary/10' :
                         'bg-primary/10'
                       }`}
@@ -217,7 +217,6 @@ export default function AdminOrders() {
                         <option value="pending" className="text-stone-900 bg-white">입금대기</option>
                       )}
                       <option value="ordered" className="text-stone-900 bg-white">결제완료</option>
-                      <option value="processing" className="text-stone-900 bg-white">배송준비중</option>
                       <option value="shipped" className="text-stone-900 bg-white">배송중</option>
                       <option value="delivered" className="text-stone-900 bg-white">배송완료</option>
                     </select>

@@ -54,7 +54,7 @@ export const getDocs = async (ref: any) => {
     url = `${API_BASE}/orders/user/${whereArg.value}`;
   }
 
-  const res = await fetch(url);
+  const res = await fetch(url, { cache: 'no-store' });
   const data = await res.json();
   return {
     docs: data.map((item: any) => ({

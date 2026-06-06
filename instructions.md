@@ -147,4 +147,8 @@
 5. **이벤트 전파 중단(stopPropagation) 대신 타겟 체크 방식 전환**:
    * 기존에는 select 태그 주변의 wrapper `div`에 `onClick={(e) => e.stopPropagation()}`를 걸어 아코디언 토글을 막았으나, 이 방식이 브라우저에 따라 select와 option 클릭 시의 포커스나 버블링 과정을 간섭하여 상태 값 변경(`onChange`)을 방해하는 부작용이 발견되었습니다.
    * 이에 따라 select를 싸고 있던 wrapper `div`의 stopPropagation 설정을 완전 삭제하고, 대신 아코디언 헤더의 `onClick` 이벤트 핸들러 자체에서 `(e.target as HTMLElement).closest('select')` 검사를 하도록 리팩토링했습니다. 이로써 이벤트 전파의 왜곡 없이 네이티브 select 드롭다운 선택 동작이 100% 정상 작동하도록 조치했습니다.
-
+6. **배송준비중 노출 제외 및 API 캐싱 완전 차단 (지연 롤백 근본 원인 해결)**:
+   * "준비중은 빼 주고"라는 지침에 맞춰, 관리자 주문 관리 화면의 상태 선택 `<select>`에서 `<option value="processing">배송준비중</option>` 코드를 제거하여 관리자가 임의로 해당 상태를 선택할 수 없도록 제외 조치하였습니다.
+   * 낙관적 업데이트 기법 적용 후에도 상태 변경이 되지 않던 근본적인 원인은 로컬 백엔드를 연동하는 `firestore-mock.ts` 내부의 `fetch` 폴링 동작이 브라우저에서 'HTTP GET Cache'로 동작해 과거 상태를 지속적으로 가져와서 프론트의 낙관적 업데이트를 다시 구버전으로 덮어씌웠기 때문이었습니다.
+   * 이를 해결하기 위해 `firestore-mock.ts`의 `getDocs` 내의 `fetch` 옵션에 `{ cache: 'no-store' }`를 추가하여 모의 환경 백엔드 API 응답의 브라우저 캐싱을 완전 차단함으로써 셀렉트 박스 클릭 즉시 상태가 정상 반영되도록 조치했습니다.
+   * 추가적으로 브라우저 호환성을 위해 `<select>` 태그에 `onClick={(e) => e.stopPropagation()}`을 직접 명시해 행(row)의 `onClick` 핸들러의 간섭 가능성을 원천적으로 차단했습니다.
