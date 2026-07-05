@@ -144,8 +144,8 @@ export default function AdminDashboard() {
       todayRevenue,
       newOrders,
       totalRevenue,
-      totalProducts,
-      totalUsers
+      totalProducts: totalProducts || 0,
+      totalUsers: totalUsers || 0
     };
   }, [orders, selectedDashboardDate, totalProducts, totalUsers]);
 
@@ -253,14 +253,14 @@ export default function AdminDashboard() {
             {[
               { 
                 label: '누적 전체 매출', 
-                value: `${stats.totalRevenue.toLocaleString()} KRW`, 
+                value: `${stats.totalRevenue.toLocaleString()}원`, 
                 icon: TrendingUp, 
                 color: 'text-primary',
                 onClick: () => setActiveTab('orders')
               },
               { 
                 label: selectedDashboardDate === todayDateString ? '오늘의 매출' : '선택일 매출', 
-                value: `${stats.todayRevenue.toLocaleString()} KRW`, 
+                value: `${stats.todayRevenue.toLocaleString()}원`, 
                 icon: TrendingUp, 
                 color: 'text-secondary',
                 onClick: () => setActiveTab('orders')

@@ -92,7 +92,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, categories
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-on-surface-variant">가격 (KRW)</label>
+              <label className="text-sm font-medium text-on-surface-variant">가격 (원)</label>
               <input 
                 type="text" required
                 value={newProduct.price === 0 ? '' : newProduct.price.toLocaleString()}

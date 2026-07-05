@@ -6,7 +6,9 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const dbPath = path.resolve(__dirname, '../database.sqlite');
+const dbPath = process.env.DATABASE_PATH
+  ? path.resolve(process.env.DATABASE_PATH)
+  : path.resolve(__dirname, '../database.sqlite');
 
 // Initialize database
 const db = new sqlite3.Database(dbPath, (err) => {
@@ -73,6 +75,8 @@ db.serialize(() => {
       totalItems INTEGER NOT NULL,
       shippingInfo TEXT NOT NULL, -- JSON String
       paymentMethod TEXT,
+      paymentMethodLabel TEXT,
+      paymentInfo TEXT, -- JSON String
       status TEXT DEFAULT 'ordered',
       trackingNumber TEXT,
       deliveryCompany TEXT,
@@ -80,6 +84,24 @@ db.serialize(() => {
       updatedAt TEXT
     )
   `);
+
+  db.all("PRAGMA table_info(orders)", (err, cols) => {
+    if (!err && cols) {
+      const columnNames = cols.map(c => c.name);
+      if (!columnNames.includes('paymentMethodLabel')) {
+        db.run("ALTER TABLE orders ADD COLUMN paymentMethodLabel TEXT", (alterErr) => {
+          if (alterErr) console.error("Error adding paymentMethodLabel column to orders:", alterErr);
+          else console.log("Added paymentMethodLabel column to orders table.");
+        });
+      }
+      if (!columnNames.includes('paymentInfo')) {
+        db.run("ALTER TABLE orders ADD COLUMN paymentInfo TEXT", (alterErr) => {
+          if (alterErr) console.error("Error adding paymentInfo column to orders:", alterErr);
+          else console.log("Added paymentInfo column to orders table.");
+        });
+      }
+    }
+  });
 
   // Site Content Table (Key-Value pair essentially)
   db.run(`

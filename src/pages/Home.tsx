@@ -50,7 +50,7 @@ const Hero = ({ content }: { content?: any }) => {
           className="w-full h-full object-cover opacity-40"
           referrerPolicy="no-referrer"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent"></div>
+        <div className="absolute inset-y-0 left-0 w-full md:w-[30%] bg-gradient-to-r from-background via-background/60 to-transparent"></div>
       </div>
 
       <div className="relative z-10 max-w-[1920px] mx-auto px-6 md:px-12 w-full">
@@ -147,7 +147,7 @@ const ProductCard = ({ product, isLoggedIn }: ProductCardProps) => {
         <h3 className="text-lg font-headline font-semibold group-hover:text-primary transition-colors leading-tight">
           {product.name}
         </h3>
-        <p className="text-xl font-bold font-headline text-on-surface">{(product.price || 0).toLocaleString()} KRW</p>
+        <p className="text-xl font-bold font-headline text-on-surface">{(product.price || 0).toLocaleString()}원</p>
       </div>
     </motion.div>
   );

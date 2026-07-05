@@ -267,7 +267,7 @@ export default function CategoryPage() {
                   <h3 className="text-lg font-headline font-semibold group-hover:text-primary transition-colors leading-tight">
                     {product.name}
                   </h3>
-                  <p className="text-xl font-bold font-headline text-on-surface">{(product.price || 0).toLocaleString()} KRW</p>
+                  <p className="text-xl font-bold font-headline text-on-surface">{(product.price || 0).toLocaleString()}원</p>
                 </div>
               </div>
             ))}
@@ -312,7 +312,7 @@ export default function CategoryPage() {
                   <h3 className="text-lg font-headline font-semibold group-hover:text-primary transition-colors leading-tight">
                     프리미엄 {data.title} 제품 {i}
                   </h3>
-                  <p className="text-xl font-bold font-headline text-on-surface">{(50000 + i * 10000).toLocaleString()} KRW</p>
+                  <p className="text-xl font-bold font-headline text-on-surface">{(50000 + i * 10000).toLocaleString()}원</p>
                 </div>
               </div>
             ))}

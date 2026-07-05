@@ -101,7 +101,7 @@ export default function CartPage() {
                         <Trash2 size={20} />
                       </button>
                     </div>
-                    <p className="text-primary font-bold text-lg">{item.price.toLocaleString()} KRW</p>
+                    <p className="text-primary font-bold text-lg">{item.price.toLocaleString()}원</p>
                   </div>
 
                   <div className="flex items-center justify-between mt-6 sm:mt-0">
@@ -122,7 +122,7 @@ export default function CartPage() {
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-on-surface-variant uppercase tracking-widest mb-1">소계</p>
-                      <p className="text-xl font-headline font-bold">{(item.price * item.quantity).toLocaleString()} KRW</p>
+                      <p className="text-xl font-headline font-bold">{(item.price * item.quantity).toLocaleString()}원</p>
                     </div>
                   </div>
                 </div>
@@ -138,7 +138,7 @@ export default function CartPage() {
               <div className="space-y-4">
                 <div className="flex justify-between text-on-surface-variant">
                   <span>상품 합계</span>
-                  <span>{totalPrice.toLocaleString()} KRW</span>
+                  <span>{totalPrice.toLocaleString()}원</span>
                 </div>
                 <div className="flex justify-between text-on-surface-variant">
                   <span>배송비</span>
@@ -147,7 +147,7 @@ export default function CartPage() {
                 <div className="pt-4 border-t border-outline-variant/10 flex justify-between items-end">
                   <span className="font-bold">최종 결제 금액</span>
                   <div className="text-right">
-                    <span className="text-3xl font-headline font-bold text-primary">{totalPrice.toLocaleString()} KRW</span>
+                    <span className="text-3xl font-headline font-bold text-primary">{totalPrice.toLocaleString()}원</span>
                   </div>
                 </div>
               </div>

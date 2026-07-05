@@ -278,7 +278,7 @@ export const Footer = () => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-8 lg:col-span-2">
+          <div className="grid grid-cols-2 gap-8 lg:col-span-2 md:justify-self-end md:text-right">
             <div className="space-y-6">
               <h4 className="text-on-surface font-headline font-bold text-sm uppercase tracking-widest">정보</h4>
               <ul className="space-y-3 text-sm text-on-surface-variant">

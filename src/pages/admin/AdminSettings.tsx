@@ -3,12 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { auth, db } from '../../firebase';
 import { verifyBeforeUpdateEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
-import { collection, getDocs, doc, deleteDoc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { Settings, Mail, Lock, ShieldAlert, CheckCircle2, Eye, EyeOff, Info, Download, Database, Trash2, RefreshCw } from 'lucide-react';
-import * as XLSX from 'xlsx';
+import { collection, getDocs, doc, deleteDoc, getDoc, setDoc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore';
+import { Settings, Mail, Lock, ShieldAlert, CheckCircle2, Eye, EyeOff, Info, Download, Database, Trash2, RefreshCw, Upload, Printer } from 'lucide-react';
+import {
+  type ExcelKind,
+  openPrintWindow,
+  parseExcelRows,
+  readExcelFile,
+  writeExcelFile
+} from '../../adminExcel';
 
 const termsHtml = `<!DOCTYPE html>
 <html lang="ko">
@@ -218,6 +224,11 @@ export default function AdminSettings() {
   const [resetConfirmInput, setResetConfirmInput] = useState('');
   const [isResetting, setIsResetting] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
+  const fileInputRefs = {
+    products: useRef<HTMLInputElement>(null),
+    orders: useRef<HTMLInputElement>(null),
+    users: useRef<HTMLInputElement>(null)
+  };
 
   const handleRestoreSiteContent = async () => {
     const confirmRestore = window.confirm("회사소개, 이용약관, 개인정보처리방침, FAQ, 문의안내의 데이터 복원 및 브랜드명(핑크버튼) 일괄 정리를 실행하시겠습니까?");
@@ -419,66 +430,106 @@ export default function AdminSettings() {
     }
   };
 
-  // 제품 엑셀 다운로드 (.xlsx)
-  const downloadProductsExcel = async () => {
-    try {
-      const querySnapshot = await getDocs(collection(db, 'products'));
-      const productsData = querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          '제품 ID': doc.id,
-          '제품명': data.name || '',
-          '가격': data.price || 0,
-          '카테고리': data.category || '',
-          '재고': data.stock || 0,
-          '설명': data.description || '',
-          '등록일': data.createdAt?.toDate ? data.createdAt.toDate().toLocaleString() : '',
-        };
-      });
+  const excelConfigs: Array<{ kind: ExcelKind; title: string; description: string }> = [
+    { kind: 'products', title: '제품 관리', description: '제품명, 카테고리, 가격, 재고, 이미지, 설명' },
+    { kind: 'orders', title: '주문 관리', description: '주문자, 배송지, 결제수단, 주문상품, 운송장' },
+    { kind: 'users', title: '회원 관리', description: '이메일, 이름, 전화번호, 역할. 비밀번호 제외' }
+  ];
 
-      if (productsData.length === 0) {
-        alert('내보낼 제품 데이터가 없습니다.');
+  const getCollectionName = (kind: ExcelKind) => {
+    if (kind === 'products') return 'products';
+    if (kind === 'orders') return 'orders';
+    return 'users';
+  };
+
+  const getKindLabel = (kind: ExcelKind) => {
+    if (kind === 'products') return '제품';
+    if (kind === 'orders') return '주문';
+    return '회원';
+  };
+
+  const loadAdminRecords = async (kind: ExcelKind) => {
+    const snapshot = await getDocs(collection(db, getCollectionName(kind)));
+    return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  };
+
+  const downloadExcel = async (kind: ExcelKind) => {
+    try {
+      const records = await loadAdminRecords(kind);
+      if (records.length === 0) {
+        alert(`내보낼 ${getKindLabel(kind)} 데이터가 없습니다.`);
         return;
       }
-
-      const worksheet = XLSX.utils.json_to_sheet(productsData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Products');
-      XLSX.writeFile(workbook, '제품정보.xlsx');
+      writeExcelFile(kind, records);
     } catch (error) {
-      console.error('Products Excel Download Error:', error);
-      alert('제품 데이터를 엑셀로 저장하는 동안 오류가 발생했습니다.');
+      console.error(`${kind} Excel Download Error:`, error);
+      alert(`${getKindLabel(kind)} 데이터를 엑셀로 저장하는 동안 오류가 발생했습니다.`);
     }
   };
 
-  // 회원 엑셀 다운로드 (.xlsx)
-  const downloadUsersExcel = async () => {
+  const printRecords = async (kind: ExcelKind) => {
     try {
-      const querySnapshot = await getDocs(collection(db, 'users'));
-      const usersData = querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          '회원 UID': doc.id,
-          '이메일': data.email || '',
-          '이름': data.displayName || '',
-          '전화번호': data.phoneNumber || '',
-          '역할': data.role || 'user',
-          '가입일': data.createdAt?.toDate ? data.createdAt.toDate().toLocaleString() : '',
-        };
-      });
+      const records = await loadAdminRecords(kind);
+      if (records.length === 0) {
+        alert(`출력할 ${getKindLabel(kind)} 데이터가 없습니다.`);
+        return;
+      }
+      openPrintWindow(kind, records);
+    } catch (error) {
+      console.error(`${kind} Print Error:`, error);
+      alert(`${getKindLabel(kind)} 데이터를 출력하는 동안 오류가 발생했습니다.`);
+    }
+  };
 
-      if (usersData.length === 0) {
-        alert('내보낼 회원 데이터가 없습니다.');
+  const saveImportedEntry = async (kind: ExcelKind, entry: { id: string; data: Record<string, any> }) => {
+    const collectionName = getCollectionName(kind);
+    const id = entry.id || crypto.randomUUID();
+    const data = { ...entry.data };
+    const targetRef = doc(db, collectionName, id);
+    const existingDoc = await getDoc(targetRef);
+
+    if (existingDoc.exists()) {
+      await updateDoc(targetRef, data);
+      return 'updated';
+    }
+
+    if (kind === 'users') {
+      await addDoc(collection(db, collectionName), { ...data, uid: id });
+    } else {
+      await addDoc(collection(db, collectionName), { ...data, id });
+    }
+    return 'created';
+  };
+
+  const importExcel = async (kind: ExcelKind, file: File) => {
+    try {
+      const rows = await readExcelFile(file);
+      const entries = parseExcelRows(kind, rows);
+      if (entries.length === 0) {
+        alert('불러올 수 있는 데이터가 없습니다. 엑셀 컬럼명을 확인해 주세요.');
         return;
       }
 
-      const worksheet = XLSX.utils.json_to_sheet(usersData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Users');
-      XLSX.writeFile(workbook, '회원정보.xlsx');
-    } catch (error) {
-      console.error('Users Excel Download Error:', error);
-      alert('회원 데이터를 엑셀로 저장하는 동안 오류가 발생했습니다.');
+      const confirmImport = window.confirm(
+        `${getKindLabel(kind)} 데이터 ${entries.length}건을 불러옵니다.\nID가 있으면 기존 데이터를 수정하고, ID가 없거나 존재하지 않으면 새로 추가합니다.\n엑셀에 없는 기존 데이터는 삭제하지 않습니다. 계속할까요?`
+      );
+      if (!confirmImport) return;
+
+      let created = 0;
+      let updated = 0;
+      for (const entry of entries) {
+        const result = await saveImportedEntry(kind, entry);
+        if (result === 'created') created += 1;
+        if (result === 'updated') updated += 1;
+      }
+
+      setMessage({
+        type: 'success',
+        text: `${getKindLabel(kind)} 엑셀 불러오기 완료: 신규 ${created}건, 수정 ${updated}건`
+      });
+    } catch (error: any) {
+      console.error(`${kind} Excel Import Error:`, error);
+      alert(`${getKindLabel(kind)} 엑셀을 불러오는 동안 오류가 발생했습니다: ${error.message || error}`);
     }
   };
 
@@ -756,28 +807,61 @@ export default function AdminSettings() {
         </h3>
         
         <p className="text-xs text-on-surface-variant/80 leading-relaxed">
-          제품 정보 및 회원 가입 정보를 엑셀(*.xlsx) 파일로 백업받거나, 테스트 후 데이터베이스를 청소하기 위한 초기화 작업을 수행할 수 있습니다.
+          제품, 주문, 회원 데이터를 엑셀(*.xlsx) 파일로 저장하거나 다시 불러올 수 있고, 필요할 때 인쇄용 화면으로 출력할 수 있습니다. 불러오기는 기존 데이터를 삭제하지 않고 ID 기준으로 수정/추가합니다.
         </p>
 
-        {/* 엑셀 다운로드 영역 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-          <button
-            type="button"
-            onClick={downloadProductsExcel}
-            className="flex items-center justify-center gap-3 p-4 bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant/20 rounded-2xl font-bold transition-all transform active:scale-[0.98] text-sm text-on-surface cursor-pointer"
-          >
-            <Download size={18} className="text-primary" />
-            제품 정보 엑셀 다운로드 (.xlsx)
-          </button>
-          
-          <button
-            type="button"
-            onClick={downloadUsersExcel}
-            className="flex items-center justify-center gap-3 p-4 bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant/20 rounded-2xl font-bold transition-all transform active:scale-[0.98] text-sm text-on-surface cursor-pointer"
-          >
-            <Download size={18} className="text-primary" />
-            회원 정보 엑셀 다운로드 (.xlsx)
-          </button>
+        {/* 엑셀 저장/불러오기/출력 영역 */}
+        <div className="space-y-3 pt-2">
+          {excelConfigs.map((config) => (
+            <div
+              key={config.kind}
+              className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 p-4 bg-surface-container-high rounded-2xl border border-outline-variant/10"
+            >
+              <div>
+                <p className="font-bold text-sm text-on-surface">{config.title}</p>
+                <p className="text-xs text-on-surface-variant mt-1">{config.description}</p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <button
+                  type="button"
+                  onClick={() => downloadExcel(config.kind)}
+                  className="flex items-center justify-center gap-2 px-4 py-3 bg-surface-container-lowest hover:bg-surface-container-highest border border-outline-variant/20 rounded-xl font-bold transition-all active:scale-[0.98] text-xs text-on-surface cursor-pointer"
+                >
+                  <Download size={16} className="text-primary" />
+                  엑셀 저장
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => fileInputRefs[config.kind].current?.click()}
+                  className="flex items-center justify-center gap-2 px-4 py-3 bg-surface-container-lowest hover:bg-surface-container-highest border border-outline-variant/20 rounded-xl font-bold transition-all active:scale-[0.98] text-xs text-on-surface cursor-pointer"
+                >
+                  <Upload size={16} className="text-primary" />
+                  엑셀 불러오기
+                </button>
+                <input
+                  ref={fileInputRefs[config.kind]}
+                  type="file"
+                  accept=".xlsx,.xls"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    e.target.value = '';
+                    if (file) importExcel(config.kind, file);
+                  }}
+                />
+
+                <button
+                  type="button"
+                  onClick={() => printRecords(config.kind)}
+                  className="flex items-center justify-center gap-2 px-4 py-3 bg-surface-container-lowest hover:bg-surface-container-highest border border-outline-variant/20 rounded-xl font-bold transition-all active:scale-[0.98] text-xs text-on-surface cursor-pointer"
+                >
+                  <Printer size={16} className="text-primary" />
+                  출력
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* 데이터베이스 초기화 영역 */}

@@ -33,8 +33,12 @@ export const getDoc = async (ref: any) => {
     if (contentObj.updatedAt && typeof contentObj.updatedAt === 'string') {
       contentObj.updatedAt = Timestamp.fromDate(new Date(contentObj.updatedAt));
     }
+
+    const docData = Object.prototype.hasOwnProperty.call(contentObj, 'content')
+      ? contentObj
+      : { ...contentObj, content: contentObj };
     
-    return { exists: () => true, data: () => contentObj, id };
+    return { exists: () => true, data: () => docData, id };
   }
 
   const res = await fetch(`${API_BASE}/${collectionName}/${id}`);
@@ -56,11 +60,15 @@ export const getDocs = async (ref: any) => {
 
   const res = await fetch(url, { cache: 'no-store' });
   const data = await res.json();
+  const docs = data.map((item: any) => ({
+    id: item.id || item.uid,
+    data: () => item
+  }));
+
   return {
-    docs: data.map((item: any) => ({
-      id: item.id || item.uid,
-      data: () => item
-    }))
+    docs,
+    size: docs.length,
+    empty: docs.length === 0
   };
 };
 
@@ -146,8 +154,9 @@ export const updateDoc = async (ref: any, data: any) => {
   const cleanedData = { ...data };
   for (const key in cleanedData) {
     if (cleanedData[key]?.type === 'increment') {
-      cleanedData[key] = cleanedData[key].value; // Fake increment, just pass value
-      // Ideally, the backend would handle this, but for simplicity we ignore complex increments here.
+      const currentDoc = await getDoc(ref);
+      const currentValue = currentDoc.exists() ? Number(currentDoc.data()?.[key] || 0) : 0;
+      cleanedData[key] = currentValue + cleanedData[key].value;
     }
   }
 

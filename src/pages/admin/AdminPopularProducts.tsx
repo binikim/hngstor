@@ -139,7 +139,7 @@ export default function AdminPopularProducts() {
                     </td>
                     <td className="px-6 py-4 font-medium">{product.name}</td>
                     <td className="px-6 py-4 text-on-surface-variant">{product.category}</td>
-                    <td className="px-6 py-4 font-mono">{product.price.toLocaleString()} KRW</td>
+                    <td className="px-6 py-4 font-mono">{product.price.toLocaleString()}원</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center gap-2">
                         {/* None Badge */}

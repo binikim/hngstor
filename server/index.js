@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import dotenv from 'dotenv';
 
 dotenv.config();
+dotenv.config({ path: '.env.local', override: true });
 
 const app = express();
 app.use(cors());
@@ -121,7 +122,8 @@ app.get('/api/orders', (req, res) => {
     const formatted = rows.map(r => ({
       ...r,
       items: JSON.parse(r.items || '[]'),
-      shippingInfo: JSON.parse(r.shippingInfo || '{}')
+      shippingInfo: JSON.parse(r.shippingInfo || '{}'),
+      paymentInfo: JSON.parse(r.paymentInfo || '{}')
     }));
     res.json(formatted);
   });
@@ -133,21 +135,22 @@ app.get('/api/orders/user/:userId', (req, res) => {
     const formatted = rows.map(r => ({
       ...r,
       items: JSON.parse(r.items || '[]'),
-      shippingInfo: JSON.parse(r.shippingInfo || '{}')
+      shippingInfo: JSON.parse(r.shippingInfo || '{}'),
+      paymentInfo: JSON.parse(r.paymentInfo || '{}')
     }));
     res.json(formatted);
   });
 });
 
 app.post('/api/orders', (req, res) => {
-  const { id: reqId, userId, userEmail, items, totalPrice, totalItems, shippingInfo, paymentMethod, status, createdAt } = req.body;
+  const { id: reqId, userId, userEmail, items, totalPrice, totalItems, shippingInfo, paymentMethod, paymentMethodLabel, paymentInfo, status, createdAt } = req.body;
   const id = reqId || crypto.randomUUID();
-  const sql = `INSERT INTO orders (id, userId, userEmail, items, totalPrice, totalItems, shippingInfo, paymentMethod, status, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+  const sql = `INSERT INTO orders (id, userId, userEmail, items, totalPrice, totalItems, shippingInfo, paymentMethod, paymentMethodLabel, paymentInfo, status, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
   
   db.run(sql, [
     id, userId, userEmail, 
     JSON.stringify(items || []), totalPrice, totalItems, 
-    JSON.stringify(shippingInfo || {}), paymentMethod, status || 'ordered', 
+    JSON.stringify(shippingInfo || {}), paymentMethod, paymentMethodLabel || paymentMethod, JSON.stringify(paymentInfo || {}), status || 'ordered', 
     createdAt || new Date().toISOString()
   ], function(err) {
     if (err) return res.status(500).json({ error: err.message });
@@ -166,7 +169,7 @@ app.put('/api/orders/:id', (req, res) => {
   
   const setString = keys.map(k => `${k} = ?`).join(', ');
   const values = keys.map(k => {
-    if (k === 'items' || k === 'shippingInfo') return JSON.stringify(updates[k]);
+    if (k === 'items' || k === 'shippingInfo' || k === 'paymentInfo') return JSON.stringify(updates[k]);
     return updates[k];
   });
   values.push(req.params.id);

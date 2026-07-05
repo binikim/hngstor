@@ -166,7 +166,7 @@ export default function AdminProducts() {
                   </td>
                   <td className="px-6 py-4 font-medium">{product.name}</td>
                   <td className="px-6 py-4 text-on-surface-variant">{product.category}</td>
-                  <td className="px-6 py-4 font-mono">{product.price.toLocaleString()} KRW</td>
+                  <td className="px-6 py-4 font-mono">{product.price.toLocaleString()}원</td>
                   <td className="px-6 py-4">
                     {editingStockId === product.id ? (
                       <div className="flex items-center gap-2">
@@ -254,7 +254,7 @@ export default function AdminProducts() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-on-surface-variant">가격 (KRW)</label>
+                  <label className="text-sm font-medium text-on-surface-variant">가격 (원)</label>
                   <input 
                     type="text" required
                     value={editingProduct.price === 0 ? '' : editingProduct.price.toLocaleString()}

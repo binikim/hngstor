@@ -1,0 +1,362 @@
+핑크버튼 결제 설정 이용설명
+작성일: 2026-07-05
+
+이 문서는 나중에 포트원 결제, 카카오페이, 토스페이, 카드 결제, 가상계좌, 실시간 계좌이체, 무통장 입금을 다시 설정할 때 보기 위한 설명입니다.
+
+
+1. 현재 프로젝트 결제 구조
+
+현재 결제 화면 파일:
+src/pages/CheckoutPage.tsx
+
+결제 설정 파일:
+src/paymentConfig.ts
+
+환경변수 예시 파일:
+.env.example
+
+현재 결제는 포트원 V1 방식의 JavaScript SDK를 사용합니다.
+포트원 SDK 주소:
+https://cdn.iamport.kr/v1/iamport.js
+
+현재 코드의 테스트 모드 값:
+IS_TEST_MODE = true
+
+현재 테스트 가맹점 식별코드:
+TEST_STORE_CODE = imp19407491
+
+실결제로 바꿀 때 수정할 값:
+src/pages/CheckoutPage.tsx 파일에서 IS_TEST_MODE를 false로 변경하고,
+REAL_STORE_CODE에 포트원 V1 고객사 식별코드를 넣어야 합니다.
+
+예:
+const IS_TEST_MODE = false;
+const REAL_STORE_CODE = 'imp실제가맹점식별코드';
+
+
+2. 포트원 관리자에서 먼저 해야 할 일
+
+1) 포트원 관리자 콘솔에 가입/로그인합니다.
+https://admin.portone.io
+
+2) 전자결제 신청을 진행합니다.
+포트원 관리자 콘솔에서 사업자 정보와 결제대행사/결제수단 신청을 진행합니다.
+
+3) 결제 채널을 추가합니다.
+메뉴:
+결제 연동 -> 연동 관리 -> 채널 관리
+
+4) 테스트로 쓸 경우:
+연동 모드를 "테스트"로 선택하고 필요한 결제대행사 채널을 추가합니다.
+
+5) 실제 운영으로 쓸 경우:
+연동 모드를 "실연동"으로 선택하고 실제 계약된 결제대행사 채널을 추가합니다.
+
+6) V1 고객사 식별코드를 확인합니다.
+메뉴:
+결제 연동 -> 연동 관리 -> 식별코드/API Keys -> V1 API
+
+확인할 값:
+고객사 식별코드
+
+이 값이 CheckoutPage.tsx의 REAL_STORE_CODE에 들어갑니다.
+
+
+3. .env.local 설정
+
+프로젝트 루트에 있는 .env.local 파일에 아래 값을 넣습니다.
+
+기본 예:
+
+VITE_API_URL="http://localhost:3001/api"
+VITE_ADMIN_EMAIL="admin@hng.com"
+APP_URL="http://localhost:3000"
+
+VITE_KAKAOPAY_TEST_PG="kakaopay"
+VITE_TOSSPAY_TEST_PG="tosspay"
+VITE_KAKAOPAY_REAL_PG="kakaopay"
+VITE_TOSSPAY_REAL_PG="tosspay"
+
+주의:
+위 값은 포트원 콘솔에 카카오페이/토스페이 채널이 실제로 등록되어 있을 때만 작동합니다.
+등록이 안 되어 있으면 "등록 된 PG 설정 정보를 찾을 수 없습니다." 오류가 납니다.
+
+
+4. 결제수단별 연결 방법
+
+4-1. 카드 결제
+
+현재 코드 기본값:
+테스트: html5_inicis.TE_integration
+실결제: html5_inicis
+pay_method: card
+
+포트원에서 해야 할 일:
+1) 결제 연동 -> 연동 관리 -> 채널 관리로 이동합니다.
+2) 테스트 또는 실연동 모드를 선택합니다.
+3) 카드 결제를 지원하는 PG를 선택합니다.
+   예: KG이니시스, 토스페이먼츠, 나이스페이 등
+4) 채널을 저장합니다.
+
+현재 코드가 기본으로 이니시스(html5_inicis)를 사용하므로,
+이니시스를 쓸 경우 그대로 진행하면 됩니다.
+
+다른 PG를 쓸 경우:
+src/paymentConfig.ts에서 card의 pgProvider 값을 계약한 PG 값으로 바꿔야 합니다.
+
+
+4-2. 카카오페이
+
+현재 환경변수:
+테스트: VITE_KAKAOPAY_TEST_PG
+실결제: VITE_KAKAOPAY_REAL_PG
+
+권장 입력값:
+VITE_KAKAOPAY_TEST_PG="kakaopay"
+VITE_KAKAOPAY_REAL_PG="kakaopay"
+
+포트원에서 해야 할 일:
+1) 결제 연동 -> 연동 관리 -> 채널 관리로 이동합니다.
+2) 테스트 또는 실연동 모드를 선택합니다.
+3) 간편결제 직연동에서 카카오페이를 선택합니다.
+4) 카카오페이 채널을 등록합니다.
+5) 저장 후 다시 결제를 테스트합니다.
+
+주의:
+포트원 문서 기준 카카오페이 V1의 pg 값은 kakaopay입니다.
+최신 포트원 SDK에서는 pg보다 channelKey 사용을 권장하지만,
+현재 프로젝트는 V1 SDK의 pg 방식으로 되어 있습니다.
+
+
+4-3. 토스페이
+
+현재 환경변수:
+테스트: VITE_TOSSPAY_TEST_PG
+실결제: VITE_TOSSPAY_REAL_PG
+
+권장 입력값:
+VITE_TOSSPAY_TEST_PG="tosspay"
+VITE_TOSSPAY_REAL_PG="tosspay"
+
+포트원에서 해야 할 일:
+1) 결제 연동 -> 연동 관리 -> 채널 관리로 이동합니다.
+2) 테스트 또는 실연동 모드를 선택합니다.
+3) 간편결제 직연동에서 토스페이를 선택합니다.
+4) 토스페이 채널을 등록합니다.
+5) 저장 후 다시 결제를 테스트합니다.
+
+주의:
+포트원 문서 기준 토스페이 V1의 pg 값은 tosspay입니다.
+토스페이는 pay_method가 card만 지원됩니다.
+결제창 안에서 사용자가 토스페이 머니 또는 카드 결제를 선택합니다.
+
+현재 토스페이 선택 시 "설정 필요"가 보이면:
+.env.local에 VITE_TOSSPAY_TEST_PG 또는 VITE_TOSSPAY_REAL_PG 값이 없다는 뜻입니다.
+
+토스페이 선택 후 "등록 된 PG 설정 정보를 찾을 수 없습니다."가 나오면:
+포트원 콘솔에 토스페이 채널이 등록되지 않았거나,
+현재 고객사 식별코드와 토스페이 채널이 맞지 않는 상태입니다.
+
+
+4-4. 실시간 계좌이체
+
+현재 코드 기본값:
+테스트: html5_inicis.TE_integration
+실결제: html5_inicis
+pay_method: trans
+
+포트원에서 해야 할 일:
+1) 결제 연동 -> 연동 관리 -> 채널 관리로 이동합니다.
+2) KG이니시스 또는 실시간 계좌이체를 지원하는 PG 채널을 추가합니다.
+3) 결제수단에서 실시간 계좌이체가 사용 가능한지 확인합니다.
+4) 저장 후 쇼핑몰에서 "실시간 계좌이체"를 선택해 테스트합니다.
+
+다른 PG를 쓸 경우:
+src/paymentConfig.ts에서 trans의 pgProvider 값을 바꿔야 합니다.
+
+
+4-5. 가상계좌
+
+현재 코드 기본값:
+테스트: html5_inicis.TE_integration
+실결제: html5_inicis
+pay_method: vbank
+
+포트원에서 해야 할 일:
+1) 결제 연동 -> 연동 관리 -> 채널 관리로 이동합니다.
+2) KG이니시스 또는 가상계좌를 지원하는 PG 채널을 추가합니다.
+3) 결제수단에서 가상계좌가 사용 가능한지 확인합니다.
+4) 저장 후 쇼핑몰에서 "가상계좌"를 선택해 테스트합니다.
+
+현재 프로젝트 저장 방식:
+가상계좌 결제창이 성공하면 주문 상태는 pending으로 저장됩니다.
+이유는 가상계좌는 계좌 발급이 성공해도 실제 입금 전이기 때문입니다.
+
+저장되는 정보:
+vbank_name
+vbank_num
+vbank_holder
+vbank_date
+
+중요:
+실제 운영에서는 가상계좌 입금 완료를 자동 반영하려면 포트원 웹훅 또는 가상계좌 입금통보 설정이 필요합니다.
+현재 프로젝트에는 주문 저장 기능은 있지만, 입금통보 웹훅을 받아 자동으로 "결제완료"로 바꾸는 서버 로직은 별도 점검/추가가 필요합니다.
+
+
+4-6. 무통장 입금
+
+무통장 입금은 포트원 PG를 거치지 않습니다.
+고객이 주문하면 주문 상태가 pending으로 저장되고,
+입금 안내 모달에 은행명, 계좌번호, 예금주가 표시됩니다.
+
+관리자에서 계좌 정보 변경:
+1) 관리자 페이지 접속
+2) 콘텐츠/설정 관리 화면으로 이동
+3) "무통장 정보 변경" 메뉴 선택
+4) 입금 은행, 계좌 번호, 예금주 입력
+5) 저장
+
+현재 기본값:
+은행명: 신한은행
+계좌번호: 110-523-123456
+예금주: H&G Stoa
+
+데이터 저장 위치:
+Firestore mock 기준 siteContent/bank 문서
+
+고객 화면 표시 위치:
+src/pages/CheckoutPage.tsx의 무통장 입금 완료 안내 모달
+
+운영 방식:
+무통장 입금은 자동 결제가 아니므로 관리자가 입금 확인 후 주문 상태를 직접 변경해야 합니다.
+
+
+5. 결제 후 주문 상태
+
+카드 결제:
+PG 성공 시 ordered로 저장
+
+카카오페이:
+PG 성공 시 ordered로 저장
+
+토스페이:
+PG 성공 시 ordered로 저장
+
+실시간 계좌이체:
+PG 성공 시 ordered로 저장
+
+가상계좌:
+계좌 발급 성공 시 pending으로 저장
+실제 입금 확인 후 ordered로 바꾸는 처리가 필요합니다.
+
+무통장 입금:
+주문 생성 시 pending으로 저장
+관리자가 입금 확인 후 직접 처리해야 합니다.
+
+
+6. 자주 나는 오류와 원인
+
+오류:
+등록 된 PG 설정 정보를 찾을 수 없습니다.
+
+원인:
+포트원 콘솔에 해당 PG 채널이 등록되어 있지 않거나,
+현재 고객사 식별코드와 결제 채널이 맞지 않는 상태입니다.
+
+해결:
+1) 포트원 관리자 콘솔에서 해당 PG 채널이 있는지 확인합니다.
+2) 테스트 모드인지 실연동 모드인지 확인합니다.
+3) CheckoutPage.tsx의 TEST_STORE_CODE 또는 REAL_STORE_CODE가 현재 포트원 계정의 값인지 확인합니다.
+4) .env.local의 VITE_KAKAOPAY_TEST_PG, VITE_TOSSPAY_TEST_PG 값을 확인합니다.
+5) 서버를 재시작합니다.
+
+
+오류:
+토스페이/카카오페이 버튼에 "설정 필요"가 표시됩니다.
+
+원인:
+.env.local에 해당 결제수단 PG 값이 비어 있습니다.
+
+해결:
+테스트라면:
+VITE_KAKAOPAY_TEST_PG="kakaopay"
+VITE_TOSSPAY_TEST_PG="tosspay"
+
+실결제라면:
+VITE_KAKAOPAY_REAL_PG="kakaopay"
+VITE_TOSSPAY_REAL_PG="tosspay"
+
+값을 넣은 후 서버를 재시작합니다.
+
+
+오류:
+실결제 가맹점 식별코드가 설정되지 않았습니다.
+
+원인:
+IS_TEST_MODE를 false로 바꿨지만 REAL_STORE_CODE가 아직 YOUR_REAL_STORE_CODE로 되어 있습니다.
+
+해결:
+src/pages/CheckoutPage.tsx에서 REAL_STORE_CODE를 실제 포트원 V1 고객사 식별코드로 변경합니다.
+
+
+7. 설정 후 테스트 순서
+
+1) .env.local 저장
+2) 개발 서버 재시작
+3) 상품을 장바구니에 담기
+4) 결제 페이지로 이동
+5) 배송지 입력
+6) 결제수단별로 하나씩 테스트
+
+테스트 추천 순서:
+1. 무통장 입금
+2. 카드 결제
+3. 실시간 계좌이체
+4. 가상계좌
+5. 카카오페이
+6. 토스페이
+
+무통장 입금은 PG를 거치지 않으므로 가장 먼저 확인하기 좋습니다.
+카카오페이/토스페이는 포트원 채널 등록이 맞아야 테스트됩니다.
+
+
+8. 참고 링크
+
+포트원 관리자 콘솔:
+https://admin.portone.io
+
+포트원 V1 결제 연동 준비:
+https://developers.portone.io/opi/ko/integration/ready/readme?v=v1
+
+포트원 V1 카카오페이:
+https://developers.portone.io/opi/ko/integration/pg/v1/kakaopay?v=v1
+
+포트원 V1 토스페이:
+https://developers.portone.io/opi/ko/integration/pg/v1/tosspay?v=v1
+
+
+9. 핵심 요약
+
+무통장 입금:
+포트원 설정 필요 없음.
+관리자 페이지에서 입금 계좌만 설정하면 됩니다.
+
+카드 결제:
+포트원에 카드 PG 채널이 필요합니다.
+현재 코드는 이니시스 기본값입니다.
+
+실시간 계좌이체:
+포트원에 계좌이체 지원 PG 채널이 필요합니다.
+현재 코드는 이니시스 기본값입니다.
+
+가상계좌:
+포트원에 가상계좌 지원 PG 채널이 필요합니다.
+입금 완료 자동 반영은 웹훅 설정이 필요합니다.
+
+카카오페이:
+포트원에 카카오페이 채널이 필요합니다.
+.env.local에 VITE_KAKAOPAY_TEST_PG 또는 VITE_KAKAOPAY_REAL_PG를 넣어야 합니다.
+
+토스페이:
+포트원에 토스페이 채널이 필요합니다.
+.env.local에 VITE_TOSSPAY_TEST_PG 또는 VITE_TOSSPAY_REAL_PG를 넣어야 합니다.

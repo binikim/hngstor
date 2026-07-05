@@ -152,3 +152,125 @@
    * 낙관적 업데이트 기법 적용 후에도 상태 변경이 되지 않던 근본적인 원인은 로컬 백엔드를 연동하는 `firestore-mock.ts` 내부의 `fetch` 폴링 동작이 브라우저에서 'HTTP GET Cache'로 동작해 과거 상태를 지속적으로 가져와서 프론트의 낙관적 업데이트를 다시 구버전으로 덮어씌웠기 때문이었습니다.
    * 이를 해결하기 위해 `firestore-mock.ts`의 `getDocs` 내의 `fetch` 옵션에 `{ cache: 'no-store' }`를 추가하여 모의 환경 백엔드 API 응답의 브라우저 캐싱을 완전 차단함으로써 셀렉트 박스 클릭 즉시 상태가 정상 반영되도록 조치했습니다.
    * 추가적으로 브라우저 호환성을 위해 `<select>` 태그에 `onClick={(e) => e.stopPropagation()}`을 직접 명시해 행(row)의 `onClick` 핸들러의 간섭 가능성을 원천적으로 차단했습니다.
+
+---
+
+## 9. 로컬 실행 환경 복구, UI 정리, 결제 시스템 보강 및 테스트 지침
+
+### 문제 상황
+* 로컬 실행 시 `node_modules`가 없고 시스템 PATH에 `npm`이 없어 앱을 바로 실행할 수 없었습니다.
+* `pnpm` 설치 과정에서 `esbuild`, `sqlite3` 등 필수 패키지의 build script 승인이 필요했고, `node` 실행 경로가 PATH에 없어 postinstall이 실패했습니다.
+* 관리자 대시보드의 통계 카드에서 `undefined개`, `undefined명`이 표시되었습니다.
+* 헤더/푸터의 핑크버튼 로고가 보이지 않았습니다.
+* 메인 히어로 그라데이션 오버레이가 너무 넓게 보였고, 푸터의 "정보", "고객센터" 영역 정렬 조정이 필요했습니다.
+* 사이트 곳곳의 금액 단위가 `KRW`로 남아 있어 한국어 쇼핑몰 톤과 맞지 않았습니다.
+* 결제 수단 UI는 있었지만, 로컬 백엔드가 PG 결제 세부정보와 결제수단 한글명을 저장하지 못했고, 테스트가 실제 DB를 건드릴 위험이 있었습니다.
+
+### 해결 방안 및 지침
+
+1. **로컬 실행 환경 복구**
+   * `pnpm install`로 의존성을 설치하고, `pnpm-workspace.yaml`에 `allowBuilds`를 기록하여 `esbuild`, `sqlite3`, `protobufjs`, `@firebase/util`, `@google/genai` 설치 스크립트가 정상 실행되도록 했습니다.
+   * 번들 Node 경로(`/Users/bini/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin`)를 PATH 앞에 두고 설치/빌드 명령을 실행해야 합니다.
+   * `.env.local`에는 로컬 기본값만 둡니다:
+     * `VITE_API_URL="http://localhost:3001/api"`
+     * `VITE_ADMIN_EMAIL="admin@hng.com"`
+     * `APP_URL="http://localhost:3000"`
+   * `GEMINI_API_KEY`는 임의로 만들지 않습니다. 실제 AI 기능이 필요할 때만 사용자가 직접 키를 넣습니다.
+   * `server/index.js`는 `.env`와 `.env.local`을 모두 읽도록 유지합니다.
+
+2. **관리자 계정 초기화**
+   * 로컬 SQLite 관리자 기본 이메일은 `admin@hng.com`입니다.
+   * 사용자가 요청한 경우에만 관리자 비밀번호를 초기화합니다.
+   * 현재 로컬 관리자 비밀번호는 SHA-256 해시 방식으로 `admin1234`로 초기화했습니다.
+   * 비밀번호는 평문 조회가 아니라 해시 비교로만 검증합니다.
+
+3. **대시보드 통계 카드 보정**
+   * `src/firestore-mock.ts`의 `getDocs()` 반환값에 실제 Firebase QuerySnapshot과 같은 `size`, `empty` 필드를 추가했습니다.
+   * `src/pages/AdminDashboard.tsx`에서 `totalProducts`, `totalUsers`는 값이 비어도 `0개`, `0명`으로 표시되도록 방어 처리합니다.
+   * 매출 표기는 `KRW` 대신 `원`으로 통일합니다.
+
+4. **핑크버튼 로고 복원**
+   * 로고 파일은 별도 이미지 파일이 아니라 `database.sqlite`의 `siteContent/footer.logoImage`에 base64 PNG로 저장되어 있습니다.
+   * 로컬 mock이 객체형 `siteContent`를 `{ ...content, content }` 형태로 함께 반환하도록 수정하여, 기존 코드의 `docSnap.data().content` 접근과 직접 필드 접근을 모두 호환시켰습니다.
+   * 헤더와 푸터는 `footerInfo.logoImage`가 있으면 이미지 로고를 사용하고, 없으면 `logoText` 또는 `핑크버튼` 텍스트를 표시합니다.
+
+5. **메인/푸터 UI 정렬 지침**
+   * 메인 히어로 그라데이션 오버레이는 전체 화면을 덮지 않도록 `src/pages/Home.tsx`에서 `md:w-[30%]`로 축소했습니다.
+   * 모바일에서는 가독성을 위해 `w-full`을 유지합니다.
+   * 푸터의 "정보", "고객센터" 영역은 `src/components/layout/Layout.tsx`에서 `md:justify-self-end md:text-right`를 적용해 오른쪽 정렬합니다.
+   * UI 수정 후에는 반드시 `tsc --noEmit`과 `vite build`를 실행해 깨짐을 확인합니다.
+
+6. **금액 단위 한글화**
+   * 화면에 표시되는 금액 단위는 `KRW` 대신 `원`을 사용합니다.
+   * 적용 대상:
+     * 홈 상품 카드
+     * 카테고리 상품 카드
+     * 장바구니 드로어
+     * 장바구니 페이지
+     * 체크아웃 결제 요약
+     * 관리자 상품 관리
+     * 관리자 인기 상품 관리
+     * 상품 등록/수정 가격 라벨
+   * 결제 버튼 문구는 `${금액}원 결제하기` 형식을 사용합니다.
+
+7. **결제 시스템 보강**
+   * `src/pages/CheckoutPage.tsx`는 포트원 SDK(`https://cdn.iamport.kr/v1/iamport.js`)를 사용합니다.
+   * SDK가 아직 로드되지 않았으면 `loadPortoneScript()`로 동적 로드 후 결제를 진행합니다.
+   * 현재 결제는 `IS_TEST_MODE = true` 테스트 모드입니다.
+   * 실결제 전환 시 `IS_TEST_MODE = false`로 바꾸고, `REAL_STORE_CODE`에 실제 포트원 가맹점 식별코드를 넣어야 합니다.
+   * 카카오페이/토스페이는 포트원 관리자에서 해당 PG 채널을 등록한 뒤 `.env.local`에 채널 값을 넣어야 합니다.
+     * 테스트 카카오페이: `VITE_KAKAOPAY_TEST_PG`
+     * 테스트 토스페이: `VITE_TOSSPAY_TEST_PG`
+     * 실결제 카카오페이: `VITE_KAKAOPAY_REAL_PG`
+     * 실결제 토스페이: `VITE_TOSSPAY_REAL_PG`
+   * 위 값이 비어 있으면 카카오페이/토스페이 버튼은 "설정 필요" 상태로 표시하고, 결제 요청을 포트원에 보내지 않습니다.
+   * 포트원 팝업에서 "등록 된 PG 설정 정보를 찾을 수 없습니다."가 나오면 코드 문제가 아니라 가맹점 식별코드와 PG 채널 등록 정보가 맞지 않는 상태입니다.
+   * 결제 수단 매핑:
+     * 카드 결제: `card`
+     * 카카오페이: `kakaopay`
+     * 토스페이: `tosspay`
+     * 실시간 계좌이체: `trans`
+     * 가상계좌: `vbank`
+     * 무통장 입금: `cash`
+   * 무통장 입금(`cash`)은 PG를 거치지 않고 주문을 `pending`(입금대기) 상태로 저장하며, 계좌 안내 모달을 띄웁니다.
+   * 가상계좌(`vbank`)는 PG 응답 성공 후에도 실제 입금 전이므로 주문 상태를 `pending`으로 저장합니다.
+   * 카드/카카오페이/토스페이/실시간 계좌이체는 PG 성공 시 `ordered`(결제완료) 상태로 저장합니다.
+   * 주문 저장 시 `paymentMethod`, `paymentMethodLabel`, `paymentInfo`를 함께 저장합니다.
+
+8. **로컬 백엔드 주문 스키마 보강**
+   * `server/db.js`의 `orders` 테이블에 다음 컬럼을 추가했습니다:
+     * `paymentMethodLabel TEXT`
+     * `paymentInfo TEXT`
+   * 기존 DB는 삭제하지 않고 `PRAGMA table_info(orders)` 확인 후 누락 컬럼만 `ALTER TABLE`로 추가합니다.
+   * `server/index.js`의 주문 생성 API는 `paymentInfo`를 JSON 문자열로 저장하고, 조회 시 객체로 파싱합니다.
+   * 주문 수정 API에서도 `paymentInfo`는 JSON 문자열로 저장되도록 처리합니다.
+
+9. **로컬 Firestore mock 재고 차감 주의사항**
+   * `src/firestore-mock.ts`의 `increment(-수량)` 처리는 기존 값을 읽은 뒤 `현재값 + 증감값`으로 계산해야 합니다.
+   * 단순히 `increment.value`를 그대로 넘기면 재고가 `-1`처럼 덮어써질 수 있으므로 금지합니다.
+
+10. **결제 테스트 지침**
+   * 실제 운영/개발 DB(`database.sqlite`)에 테스트 주문을 넣지 않습니다.
+   * 테스트는 반드시 임시 SQLite DB를 사용합니다.
+   * `server/db.js`는 `DATABASE_PATH` 환경변수가 있으면 해당 DB 파일을 사용합니다.
+   * 결제 테스트 서버 예시:
+     ```bash
+     PATH=/Users/bini/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin:$PATH DATABASE_PATH=/private/tmp/hngstor-payment-test.sqlite PORT=3003 node server/index.js
+     ```
+   * 결제 흐름 테스트 예시:
+     ```bash
+     PATH=/Users/bini/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin:$PATH DATABASE_PATH=/private/tmp/hngstor-payment-test.sqlite TEST_API_BASE=http://127.0.0.1:3003/api node scripts/test_payment_flow.js
+     ```
+   * 테스트 스크립트(`scripts/test_payment_flow.js`)는 임시 DB에서 다음을 검증합니다:
+     * 무통장 입금 주문 생성
+     * 무통장 입금 상태 `pending` 저장
+     * 가상계좌 주문 생성
+     * 가상계좌 상태 `pending` 저장
+     * 결제수단 한글명 저장
+     * 가상계좌 결제정보 저장
+     * 재고 차감 결과
+   * 포트원 SDK 접근성은 다음으로 확인합니다:
+     ```bash
+     curl -I https://cdn.iamport.kr/v1/iamport.js
+     ```
+   * 결제 테스트 후 임시 서버는 종료합니다.

@@ -98,7 +98,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                           <Trash2 size={16} />
                         </button>
                       </div>
-                      <p className="text-primary font-bold text-sm">{item.price.toLocaleString()} KRW</p>
+                      <p className="text-primary font-bold text-sm">{item.price.toLocaleString()}원</p>
                       
                       <div className="flex items-center gap-3 mt-3">
                         <div className="flex items-center bg-surface-container-high rounded-lg p-1">
@@ -129,7 +129,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 <>
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-on-surface-variant font-medium">총 합계</span>
-                    <span className="text-xl font-headline font-bold text-primary">{totalPrice.toLocaleString()} KRW</span>
+                    <span className="text-xl font-headline font-bold text-primary">{totalPrice.toLocaleString()}원</span>
                   </div>
                   <button 
                     onClick={() => {

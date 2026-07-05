@@ -29,6 +29,14 @@ declare global {
 
 import { collection, addDoc, serverTimestamp, doc, updateDoc, getDoc, increment } from 'firebase/firestore';
 import { auth, db, handleFirestoreError, OperationType } from '../firebase';
+import {
+  PAYMENT_METHOD_LABELS,
+  PAYMENT_METHODS,
+  getPaymentSetupMessage,
+  getPortonePaymentConfig,
+  isPaymentMethodUnavailable,
+  type PaymentMethod
+} from '../paymentConfig';
 
 // ==========================================
 // 결제 시스템 테스트 모드 설정 (스위치)
@@ -36,6 +44,31 @@ import { auth, db, handleFirestoreError, OperationType } from '../firebase';
 const IS_TEST_MODE = true; // 실결제 전환 시 false로 변경하세요.
 const TEST_STORE_CODE = 'imp19407491'; // 포트원 공용 테스트 가맹점 식별코드
 const REAL_STORE_CODE = 'YOUR_REAL_STORE_CODE'; // 실 결제 가맹점 식별코드 (예: impXXXXXXX)
+const PORTONE_SCRIPT_SRC = 'https://cdn.iamport.kr/v1/iamport.js';
+const PAYMENT_ENV = import.meta.env;
+
+const formatWon = (amount: number) => `${amount.toLocaleString()}원`;
+
+const loadPortoneScript = () => new Promise<void>((resolve, reject) => {
+  if (window.IMP) {
+    resolve();
+    return;
+  }
+
+  const existingScript = document.querySelector<HTMLScriptElement>(`script[src="${PORTONE_SCRIPT_SRC}"]`);
+  if (existingScript) {
+    existingScript.addEventListener('load', () => resolve(), { once: true });
+    existingScript.addEventListener('error', () => reject(new Error('결제 모듈 로드 실패')), { once: true });
+    return;
+  }
+
+  const script = document.createElement('script');
+  script.src = PORTONE_SCRIPT_SRC;
+  script.async = true;
+  script.onload = () => resolve();
+  script.onerror = () => reject(new Error('결제 모듈 로드 실패'));
+  document.head.appendChild(script);
+});
 
 export default function CheckoutPage() {
   const { cart, totalPrice, totalItems, clearCart } = useCart();
@@ -60,7 +93,7 @@ export default function CheckoutPage() {
     address: '',
     detailAddress: '',
     deliveryNote: '',
-    paymentMethod: 'card'
+    paymentMethod: 'card' as PaymentMethod
   });
 
   const [isSameAsOrderer, setIsSameAsOrderer] = useState(false);
@@ -243,6 +276,7 @@ export default function CheckoutPage() {
             deliveryNote: formData.deliveryNote
           },
           paymentMethod: 'cash',
+          paymentMethodLabel: PAYMENT_METHOD_LABELS.cash,
           status: 'pending', // Pending payment
           createdAt: serverTimestamp()
         };
@@ -264,9 +298,23 @@ export default function CheckoutPage() {
       }
 
       // 3. Process PG Payments (Card, KakaoPay, TossPay, Trans, VBank) via Portone
+      try {
+        await loadPortoneScript();
+      } catch (error) {
+        alert('결제 모듈을 로드하지 못했습니다. 네트워크 상태를 확인한 뒤 다시 시도해 주세요.');
+        setIsSubmitting(false);
+        return;
+      }
+
       const { IMP } = window;
       if (!IMP) {
         alert('결제 모듈을 로드하지 못했습니다. 새로고침 후 다시 시도해 주세요.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!IS_TEST_MODE && REAL_STORE_CODE === 'YOUR_REAL_STORE_CODE') {
+        alert('실결제 가맹점 식별코드가 설정되지 않았습니다. 관리자에게 문의해 주세요.');
         setIsSubmitting(false);
         return;
       }
@@ -276,63 +324,16 @@ export default function CheckoutPage() {
 
       const tempMerchantUid = `mid_${new Date().getTime()}`;
 
-      // PG and Payment Method Mapping
-      let pgProvider = 'html5_inicis';
-      let payMethod = 'card';
-
-      if (IS_TEST_MODE) {
-        // 테스트 모드 전용 PG 채널 설정
-        switch (formData.paymentMethod) {
-          case 'kakaopay':
-            pgProvider = 'kakaopay.TC0ONETIME';
-            payMethod = 'card';
-            break;
-          case 'tosspay':
-            pgProvider = 'tosspay.tosspay';
-            payMethod = 'card';
-            break;
-          case 'trans':
-            pgProvider = 'html5_inicis.TE_integration';
-            payMethod = 'trans';
-            break;
-          case 'vbank':
-            pgProvider = 'html5_inicis.TE_integration';
-            payMethod = 'vbank';
-            break;
-          default: // 'card'
-            pgProvider = 'html5_inicis.TE_integration';
-            payMethod = 'card';
-            break;
-        }
-      } else {
-        // 실결제 모드 PG 설정 (실 가맹점 계약 정보)
-        switch (formData.paymentMethod) {
-          case 'kakaopay':
-            pgProvider = 'kakaopay';
-            payMethod = 'card';
-            break;
-          case 'tosspay':
-            pgProvider = 'tosspay';
-            payMethod = 'card';
-            break;
-          case 'trans':
-            pgProvider = 'html5_inicis';
-            payMethod = 'trans';
-            break;
-          case 'vbank':
-            pgProvider = 'html5_inicis';
-            payMethod = 'vbank';
-            break;
-          default: // 'card'
-            pgProvider = 'html5_inicis';
-            payMethod = 'card';
-            break;
-        }
+      const paymentConfig = getPortonePaymentConfig(formData.paymentMethod, IS_TEST_MODE, PAYMENT_ENV);
+      if (!paymentConfig) {
+        alert(getPaymentSetupMessage(formData.paymentMethod, IS_TEST_MODE));
+        setIsSubmitting(false);
+        return;
       }
 
       IMP.request_pay({
-        pg: pgProvider,
-        pay_method: payMethod,
+        pg: paymentConfig.pgProvider,
+        pay_method: paymentConfig.payMethod,
         merchant_uid: tempMerchantUid,
         name: cart.length > 1 ? `${cart[0].name} 외 ${cart.length - 1}건` : cart[0].name,
         amount: totalPrice,
@@ -344,6 +345,7 @@ export default function CheckoutPage() {
       }, async (rsp: any) => {
         if (rsp.success) {
           try {
+            const isVirtualAccount = formData.paymentMethod === 'vbank';
             // Save order to Firestore with payment info
             const orderData = {
               userId: auth.currentUser?.uid || 'anonymous',
@@ -362,13 +364,18 @@ export default function CheckoutPage() {
                 deliveryNote: formData.deliveryNote
               },
               paymentMethod: formData.paymentMethod,
+              paymentMethodLabel: PAYMENT_METHOD_LABELS[formData.paymentMethod] || formData.paymentMethod,
               paymentInfo: {
                 imp_uid: rsp.imp_uid,
                 merchant_uid: rsp.merchant_uid,
                 pg_provider: rsp.pg_provider,
-                pay_method: rsp.pay_method
+                pay_method: rsp.pay_method,
+                vbank_name: rsp.vbank_name,
+                vbank_num: rsp.vbank_num,
+                vbank_holder: rsp.vbank_holder,
+                vbank_date: rsp.vbank_date
               },
-              status: 'ordered', // Payment completed
+              status: isVirtualAccount ? 'pending' : 'ordered',
               createdAt: serverTimestamp()
             };
 
@@ -383,7 +390,7 @@ export default function CheckoutPage() {
             }
 
             clearCart();
-            alert('결제 및 주문이 완료되었습니다!');
+            alert(isVirtualAccount ? '가상계좌가 발급되었습니다. 입금 확인 후 배송이 시작됩니다.' : '결제 및 주문이 완료되었습니다!');
             navigate('/my-orders');
           } catch (error) {
             console.error("Order Save Error:", error);
@@ -601,21 +608,26 @@ export default function CheckoutPage() {
               <div className="bg-surface-container-low p-6 rounded-3xl border border-outline-variant/10">
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {[
-                      { id: 'addr_paymethod0', value: 'card', label: '카드 결제' },
-                      { id: 'addr_paymethod1', value: 'kakaopay', label: '카카오페이' },
-                      { id: 'addr_paymethod2', value: 'tosspay', label: '토스페이' },
-                      { id: 'addr_paymethod3', value: 'trans', label: '실시간 계좌이체' },
-                      { id: 'addr_paymethod4', value: 'vbank', label: '가상계좌' },
-                      { id: 'addr_paymethod5', value: 'cash', label: '무통장 입금' },
-                    ].map((method) => (
+                    {PAYMENT_METHODS.map((method) => {
+                      const isUnavailable = isPaymentMethodUnavailable(method.value, IS_TEST_MODE, PAYMENT_ENV);
+                      const isSelected = formData.paymentMethod === method.value;
+
+                      return (
                       <div 
                         key={method.id} 
-                        onClick={() => setFormData(prev => ({ ...prev, paymentMethod: method.value }))}
+                        onClick={() => {
+                          if (isUnavailable) {
+                            alert(getPaymentSetupMessage(method.value, IS_TEST_MODE));
+                            return;
+                          }
+                          setFormData(prev => ({ ...prev, paymentMethod: method.value }));
+                        }}
                         className={`flex items-center gap-3 p-4 rounded-xl border transition-all cursor-pointer ${
-                          formData.paymentMethod === method.value 
+                          isSelected 
                             ? 'border-primary bg-primary/5 ring-1 ring-primary' 
                             : 'border-outline-variant/10 hover:bg-surface-container-high'
+                        } ${
+                          isUnavailable ? 'opacity-50 cursor-not-allowed hover:bg-surface-container-low' : ''
                         }`}
                       >
                         <input 
@@ -623,15 +635,20 @@ export default function CheckoutPage() {
                           name="paymentMethod" 
                           value={method.value} 
                           type="radio" 
-                          checked={formData.paymentMethod === method.value}
-                          onChange={(e) => setFormData(prev => ({ ...prev, paymentMethod: e.target.value }))}
+                          checked={isSelected}
+                          disabled={isUnavailable}
+                          onChange={(e) => setFormData(prev => ({ ...prev, paymentMethod: e.target.value as PaymentMethod }))}
                           className="w-4 h-4 text-primary focus:ring-primary border-outline-variant/20"
                         />
                         <label htmlFor={method.id} className="flex-grow text-sm font-medium cursor-pointer">
                           {method.label}
+                          {isUnavailable && (
+                            <span className="ml-2 text-xs text-on-surface-variant">설정 필요</span>
+                          )}
                         </label>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -646,7 +663,7 @@ export default function CheckoutPage() {
               <div className="space-y-4">
                 <div className="flex justify-between text-on-surface-variant">
                   <span>주문 상품 ({totalItems}개)</span>
-                  <span className="font-medium">{totalPrice.toLocaleString()} KRW</span>
+                  <span className="font-medium">{formatWon(totalPrice)}</span>
                 </div>
                 <div className="flex justify-between text-on-surface-variant">
                   <span>배송비</span>
@@ -654,7 +671,7 @@ export default function CheckoutPage() {
                 </div>
                 <div className="pt-4 border-t border-outline-variant/10 flex justify-between items-end">
                   <span className="font-bold">합계</span>
-                  <span className="text-3xl font-headline font-bold text-primary">{totalPrice.toLocaleString()} KRW</span>
+                  <span className="text-3xl font-headline font-bold text-primary">{formatWon(totalPrice)}</span>
                 </div>
               </div>
 
@@ -668,7 +685,7 @@ export default function CheckoutPage() {
                   disabled={isSubmitting}
                   className="w-full bg-primary text-on-primary py-5 rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-primary-container transition-all transform active:scale-95 shadow-xl shadow-primary/20 disabled:opacity-50"
                 >
-                  {isSubmitting ? '처리 중...' : `${totalPrice.toLocaleString()}원 결제하기`}
+                  {isSubmitting ? '처리 중...' : `${formatWon(totalPrice)} 결제하기`}
                 </button>
               </div>
             </div>
