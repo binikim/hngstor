@@ -29,6 +29,7 @@ import {
   Plus,
   ChevronRight,
   FileText,
+  MessageSquare,
   Calendar as CalendarIcon,
   X
 } from 'lucide-react';
@@ -38,6 +39,7 @@ import AdminOrders from './admin/AdminOrders';
 import AdminUsers from './admin/AdminUsers';
 import AdminSettings from './admin/AdminSettings';
 import AdminContent from './admin/AdminContent';
+import AdminInquiries from './admin/AdminInquiries';
 import AddProductModal from '../components/admin/AddProductModal';
 
 interface OrderItem {
@@ -69,7 +71,7 @@ interface Order {
   deliveryCompany?: string;
 }
 
-type AdminTab = 'dashboard' | 'products' | 'popular' | 'orders' | 'users' | 'settings' | 'content';
+type AdminTab = 'dashboard' | 'products' | 'popular' | 'orders' | 'users' | 'settings' | 'content' | 'inquiries';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -232,6 +234,7 @@ export default function AdminDashboard() {
       case 'users': return <AdminUsers />;
       case 'settings': return <AdminSettings />;
       case 'content': return <AdminContent />;
+      case 'inquiries': return <AdminInquiries />;
       default: return (
         <>
           {/* Stats Grid */}
@@ -361,6 +364,7 @@ export default function AdminDashboard() {
               { id: 'orders', label: '주문 관리', icon: ShoppingBag },
               { id: 'users', label: '회원 관리', icon: Users },
               { id: 'content', label: '컨텐츠 관리', icon: FileText },
+              { id: 'inquiries', label: '문의 관리', icon: MessageSquare },
               { id: 'settings', label: '설정', icon: Settings },
             ].map((tab) => (
               <button

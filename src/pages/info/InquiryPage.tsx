@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, MessageCircle, Send, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { doc, getDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import Markdown from 'react-markdown';
 
@@ -15,6 +15,7 @@ export default function InquiryPage() {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<any>(null);
   const [pageLoading, setPageLoading] = useState(true);
+  const [saveError, setSaveError] = useState('');
 
   useEffect(() => {
     async function fetchContent() {
@@ -33,13 +34,27 @@ export default function InquiryPage() {
     fetchContent();
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    setSaveError('');
+    const values = new FormData(e.currentTarget);
+    try {
+      await addDoc(collection(db, 'inquiries'), {
+        name: String(values.get('name') || '').trim(),
+        email: String(values.get('email') || '').trim(),
+        subject: String(values.get('subject') || '').trim(),
+        message: String(values.get('message') || '').trim(),
+        status: 'new',
+        createdAt: new Date().toISOString()
+      });
       setSubmitted(true);
-    }, 1500);
+    } catch (error) {
+      console.error('Inquiry save error:', error);
+      setSaveError('문의 저장에 실패했습니다. 입력 내용을 확인하고 잠시 후 다시 시도해 주세요.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (pageLoading) {
@@ -111,7 +126,7 @@ export default function InquiryPage() {
             {/* 문의 폼 */}
             <AnimatePresence mode="wait">
               {submitted ? (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   className="bg-primary/5 border border-primary/20 rounded-3xl p-12 text-center space-y-6"
@@ -123,7 +138,7 @@ export default function InquiryPage() {
                     <h3 className="text-2xl font-headline font-bold">전송 완료</h3>
                     <p className="text-on-surface-variant">문의하신 내용이 성공적으로 접수되었습니다. <br /> 평일 24시간 이내에 답변드리겠습니다.</p>
                   </div>
-                  <button 
+                  <button
                     onClick={() => setSubmitted(false)}
                     className="text-primary font-bold hover:underline"
                   >
@@ -131,49 +146,53 @@ export default function InquiryPage() {
                   </button>
                 </motion.div>
               ) : (
-                <motion.form 
+                <motion.form
                   onSubmit={handleSubmit}
                   className="space-y-6"
                 >
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-xs font-bold px-1">성함</label>
-                      <input 
+                      <input
                         required
-                        type="text" 
+                        name="name"
+                        type="text"
                         className="w-full bg-surface-container-low border border-outline-variant/10 rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                         placeholder="이름을 입력하세요"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-bold px-1">연락처</label>
-                      <input 
+                      <label className="text-xs font-bold px-1">문의 분류</label>
+                      <input
                         required
-                        type="tel" 
+                        name="subject"
+                        type="text"
                         className="w-full bg-surface-container-low border border-outline-variant/10 rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
-                        placeholder="010-0000-0000"
+                        placeholder="예: 배송 문의"
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-bold px-1">이메일</label>
-                    <input 
+                    <input
                       required
-                      type="email" 
+                      type="email"
                       className="w-full bg-surface-container-low border border-outline-variant/10 rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                       placeholder="email@example.com"
                     />
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-bold px-1">문의 내용</label>
-                    <textarea 
+                    <textarea
                       required
+                      name="message"
                       rows={6}
                       className="w-full bg-surface-container-low border border-outline-variant/10 rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none"
                       placeholder="문의하실 내용을 상세히 적어주세요."
                     />
                   </div>
-                  <button 
+                  {saveError && <p role="alert" className="text-sm text-red-600">{saveError}</p>}
+                  <button
                     disabled={loading}
                     className="w-full bg-primary text-on-primary py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary-container transition-all active:scale-[0.98] disabled:opacity-50"
                   >
