@@ -6,11 +6,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { ShoppingCart, Lock } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
-import { auth, db } from '../firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { db } from '../firebase';
 import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
+import AdultImageGate from '../components/AdultImageGate';
+import { useAdultConfirmation } from '../context/AdultConfirmationContext';
 
 interface Product {
   id: string;
@@ -103,7 +104,7 @@ const matchCategory = (productCat: string, categoryTitle: string): boolean => {
 export default function CategoryPage() {
   const { categoryId } = useParams<{ categoryId: string }>();
   const { addToCart } = useCart();
-  const [user, setUser] = useState<any>(null);
+  const { isAdultConfirmed } = useAdultConfirmation();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
@@ -153,13 +154,6 @@ export default function CategoryPage() {
     fetchProducts();
   }, []);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return () => unsubscribe();
-  }, []);
-
   const filteredProducts = products.filter(product => 
     data ? matchCategory(product.category, data.title) : false
   );
@@ -191,15 +185,9 @@ export default function CategoryPage() {
           <img 
             src={data.image} 
             alt={data.title} 
-            className={`w-full h-full object-cover transition-opacity duration-500 ${!user ? 'blur-3xl opacity-10' : 'opacity-40'}`}
+            className="w-full h-full object-cover transition-opacity duration-500 opacity-40"
             referrerPolicy="no-referrer"
           />
-          {!user && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40">
-              <Lock className="text-white/20 mb-4" size={48} />
-              <p className="text-white font-bold text-xl">로그인 후 이미지를 확인할 수 있습니다.</p>
-            </div>
-          )}
           <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/60 to-background"></div>
         </div>
         <div className="relative z-10 max-w-[1920px] mx-auto px-6 md:px-12 w-full text-center">
@@ -238,11 +226,8 @@ export default function CategoryPage() {
             {filteredProducts.map((product) => (
               <div key={product.id} className="group">
                 <div className="relative aspect-[3/4] bg-surface-container-low rounded-2xl overflow-hidden mb-6">
-                  {!user ? (
-                    <div className="w-full h-full bg-surface-container-high flex flex-col items-center justify-center p-6 text-center">
-                      <Lock className="text-on-surface-variant/10 mb-4" size={40} />
-                      <p className="text-on-surface-variant/40 text-sm font-bold leading-tight">로그인 시<br/>상품 이미지가 노출됩니다.</p>
-                    </div>
+                  {!isAdultConfirmed ? (
+                    <AdultImageGate className="w-full h-full bg-surface-container-high" />
                   ) : (
                     <>
                       <img 
@@ -278,11 +263,8 @@ export default function CategoryPage() {
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
               <div key={i} className="group">
                 <div className="relative aspect-[3/4] bg-surface-container-low rounded-2xl overflow-hidden mb-6">
-                  {!user ? (
-                    <div className="w-full h-full bg-surface-container-high flex flex-col items-center justify-center p-6 text-center">
-                      <Lock className="text-on-surface-variant/10 mb-4" size={40} />
-                      <p className="text-on-surface-variant/40 text-sm font-bold leading-tight">로그인 시<br/>상품 이미지가 노출됩니다.</p>
-                    </div>
+                  {!isAdultConfirmed ? (
+                    <AdultImageGate className="w-full h-full bg-surface-container-high" />
                   ) : (
                     <>
                       <img 

@@ -24,6 +24,7 @@ import ProfilePage from './pages/ProfilePage';
 import MigrationAdmin from './pages/MigrationAdmin';
 import { Navbar, Footer } from './components/layout/Layout';
 import { CartProvider } from './context/CartContext';
+import { AdultConfirmationProvider } from './context/AdultConfirmationContext';
 
 // Scroll to top on route change
 function ScrollToTop() {
@@ -38,35 +39,37 @@ function ScrollToTop() {
 
 export default function App() {
   return (
-    <CartProvider>
-      <Router>
-        <ScrollToTop />
-        <div className="min-h-screen bg-background text-on-surface selection:bg-primary/30">
-          <Navbar />
-          <main>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/category/:categoryId" element={<CategoryPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/admin/login" element={<LoginPage />} />
-              <Route path="/signup" element={<SignupPage />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/cart" element={<CartPage />} />
-              <Route path="/checkout" element={<CheckoutPage />} />
-              <Route path="/my-orders" element={<MyOrdersPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/terms" element={<TermsPage />} />
-              <Route path="/privacy" element={<PrivacyPage />} />
-              <Route path="/faq" element={<FAQPage />} />
-              <Route path="/inquiry" element={<InquiryPage />} />
-              <Route path="/tracking" element={<TrackingPage />} />
-              <Route path="/migrate" element={<MigrationAdmin />} />
-            </Routes>
-          </main>
-          <Footer />
-        </div>
-      </Router>
-    </CartProvider>
+    <AdultConfirmationProvider>
+      <CartProvider>
+        <Router>
+          <ScrollToTop />
+          <div className="min-h-screen bg-background text-on-surface selection:bg-primary/30">
+            <Navbar />
+            <main>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/category/:categoryId" element={<CategoryPage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/admin/login" element={<LoginPage />} />
+                <Route path="/signup" element={<SignupPage />} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/cart" element={<CartPage />} />
+                <Route path="/checkout" element={<CheckoutPage />} />
+                <Route path="/my-orders" element={<MyOrdersPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/terms" element={<TermsPage />} />
+                <Route path="/privacy" element={<PrivacyPage />} />
+                <Route path="/faq" element={<FAQPage />} />
+                <Route path="/inquiry" element={<InquiryPage />} />
+                <Route path="/tracking" element={<TrackingPage />} />
+                <Route path="/migrate" element={<MigrationAdmin />} />
+              </Routes>
+            </main>
+            <Footer />
+          </div>
+        </Router>
+      </CartProvider>
+    </AdultConfirmationProvider>
   );
 }

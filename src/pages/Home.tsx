@@ -16,6 +16,8 @@ import { auth, db, handleFirestoreError, OperationType } from '../firebase';
 import { collection, onSnapshot, query, orderBy, limit, addDoc, serverTimestamp, getDocs, doc, getDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useCart } from '../context/CartContext';
+import AdultImageGate from '../components/AdultImageGate';
+import { useAdultConfirmation } from '../context/AdultConfirmationContext';
 
 // --- Types ---
 interface Product {
@@ -76,11 +78,10 @@ const Hero = ({ content }: { content?: any }) => {
 
 interface CategoryCardProps {
   category: Category;
-  isLoggedIn: boolean;
   key?: React.Key;
 }
 
-const CategoryCard = ({ category, isLoggedIn }: CategoryCardProps) => {
+const CategoryCard = ({ category }: CategoryCardProps) => {
   return (
     <Link to={category.path}>
       <motion.div 
@@ -105,12 +106,12 @@ const CategoryCard = ({ category, isLoggedIn }: CategoryCardProps) => {
 
 interface ProductCardProps {
   product: Product;
-  isLoggedIn: boolean;
   key?: React.Key;
 }
 
-const ProductCard = ({ product, isLoggedIn }: ProductCardProps) => {
+const ProductCard = ({ product }: ProductCardProps) => {
   const { addToCart } = useCart();
+  const { isAdultConfirmed } = useAdultConfirmation();
 
   return (
     <motion.div 
@@ -120,12 +121,16 @@ const ProductCard = ({ product, isLoggedIn }: ProductCardProps) => {
       className="group"
     >
       <div className="relative aspect-[3/4] bg-surface-container-low rounded-2xl overflow-hidden mb-6">
-        <img 
-          src={product.image} 
-          alt={product.name} 
-          className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110`}
-          referrerPolicy="no-referrer"
-        />
+        {isAdultConfirmed ? (
+          <img
+            src={product.image}
+            alt={product.name}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            referrerPolicy="no-referrer"
+          />
+        ) : (
+          <AdultImageGate className="h-full bg-surface-container-high" />
+        )}
         {product.badge && (
           <div className="absolute top-4 right-4">
             <span className="bg-tertiary-container text-on-tertiary-container px-3 py-1 rounded text-[10px] font-bold font-headline uppercase tracking-widest">
@@ -133,14 +138,16 @@ const ProductCard = ({ product, isLoggedIn }: ProductCardProps) => {
             </span>
           </div>
         )}
-        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <button 
-            onClick={() => addToCart(product)}
-            className="bg-primary text-on-primary px-6 py-3 rounded-xl font-bold flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform active:scale-95"
-          >
-            <ShoppingCart size={18} /> 담기
-          </button>
-        </div>
+        {isAdultConfirmed && (
+          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <button
+              onClick={() => addToCart(product)}
+              className="bg-primary text-on-primary px-6 py-3 rounded-xl font-bold flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform active:scale-95"
+            >
+              <ShoppingCart size={18} /> 담기
+            </button>
+          </div>
+        )}
       </div>
       <div className="space-y-2">
         <p className="text-xs text-on-surface-variant font-medium tracking-wider uppercase">{product.category}</p>
@@ -200,7 +207,6 @@ const seedProducts = async () => {
 
 export default function Home() {
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
   const [activeFilter, setActiveFilter] = useState("전체");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -253,7 +259,6 @@ export default function Home() {
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
       if (currentUser) {
         try {
           const emailLower = currentUser.email?.toLowerCase();
@@ -319,7 +324,7 @@ export default function Home() {
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {categoriesData.map((cat, index) => (
-            <CategoryCard key={cat.id || index} category={cat} isLoggedIn={!!user} />
+            <CategoryCard key={cat.id || index} category={cat} />
           ))}
         </div>
       </section>
@@ -358,7 +363,7 @@ export default function Home() {
             ))
           ) : (
             filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} isLoggedIn={!!user} />
+              <ProductCard key={product.id} product={product} />
             ))
           )}
         </div>
