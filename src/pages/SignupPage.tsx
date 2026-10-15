@@ -208,7 +208,7 @@ export default function SignupPage() {
         phoneNumber: phoneNumber, // Save verified phone number
         photoURL: null,
         role: isDefaultAdmin ? 'admin' : 'user',
-        isAdult: true, // Verification completed via phone
+        isAdult: false,
         createdAt: serverTimestamp()
       });
 
