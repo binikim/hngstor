@@ -14,11 +14,11 @@ const AdultConfirmationContext = createContext<AdultConfirmationValue>({
 
 export function AdultConfirmationProvider({ children }: { children: React.ReactNode }) {
   const [isAdultConfirmed, setIsAdultConfirmed] = useState(() =>
-    typeof window !== 'undefined' && window.localStorage.getItem(STORAGE_KEY) === 'true'
+    typeof window !== 'undefined' && window.sessionStorage.getItem(STORAGE_KEY) === 'true'
   );
 
   const confirmAdult = () => {
-    window.localStorage.setItem(STORAGE_KEY, 'true');
+    window.sessionStorage.setItem(STORAGE_KEY, 'true');
     setIsAdultConfirmed(true);
   };
 
