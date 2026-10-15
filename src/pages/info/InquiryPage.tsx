@@ -176,6 +176,7 @@ export default function InquiryPage() {
                     <label className="text-xs font-bold px-1">이메일</label>
                     <input
                       required
+                      name="email"
                       type="email"
                       className="w-full bg-surface-container-low border border-outline-variant/10 rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                       placeholder="email@example.com"
