@@ -570,6 +570,7 @@ export default function AdminDashboard() {
                         {/* Date number */}
                         <div className="flex items-center justify-between w-full">
                           <span className={`text-xs font-bold rounded-lg px-1.5 py-0.5 ${
+                            holidays.length > 0 ? 'bg-rose-100 text-error font-extrabold' :
                             isSelected ? 'bg-primary text-on-primary' : 
                             dayOfWeek === 0 ? 'text-error font-extrabold' : 
                             dayOfWeek === 6 ? 'text-primary font-extrabold' : 'text-on-surface font-extrabold'
