@@ -93,6 +93,45 @@ export default function AdminDashboard() {
   // Calendar Year/Month State
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const calendarYear = calendarDate.getFullYear();
+  const [holidaysByDate, setHolidaysByDate] = useState<Map<string, { name: string; substitute: boolean }[]>>(new Map());
+
+  useEffect(() => {
+    let active = true;
+    const controller = new AbortController();
+    const startYear = Math.max(calendarYear - 1, 2004);
+
+    setHolidaysByDate(new Map());
+    fetch(`/api/holidays?startYear=${startYear}&endYear=${calendarYear + 1}`, { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Failed to fetch Korean public holidays');
+        return response.json() as Promise<{ data: { date: number; name: string }[] }>;
+      })
+      .then(({ data }) => {
+        if (!active) return;
+
+        const holidays = new Map<string, { name: string; substitute: boolean }[]>();
+        data.forEach((holiday) => {
+          const date = String(holiday.date);
+          if (!/^\d{8}$/.test(date)) return;
+
+          const dateString = `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`;
+          const dateHolidays = holidays.get(dateString) ?? [];
+          dateHolidays.push({ name: holiday.name, substitute: holiday.name.includes('대체공휴일') });
+          holidays.set(dateString, dateHolidays);
+        });
+
+        setHolidaysByDate(holidays);
+      })
+      .catch((error) => {
+        if (active) console.error('Error fetching Korean public holidays:', error);
+      });
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [calendarYear]);
 
   // Subscribe to all orders
   useEffect(() => {
@@ -496,20 +535,24 @@ export default function AdminDashboard() {
                   return days.map((dayItem, index) => {
                     const dayData = ordersByDate[dayItem.dateString];
                     const hasOrders = dayData && dayData.revenue > 0;
+                    const holidays = holidaysByDate.get(dayItem.dateString) ?? [];
                     const isSelected = selectedDashboardDate === dayItem.dateString;
                     const dayOfWeek = index % 7;
                     
                     // Text formatting for tooltip
-                    const tooltipText = hasOrders
+                    const orderTooltip = hasOrders
                       ? `[${dayItem.dateString}] 총 매출: ${dayData.revenue.toLocaleString()}원\n\n출고 품목:\n` + 
                         dayData.items.map(item => `• ${item.name} (수량: ${item.quantity})`).join('\n')
                       : `[${dayItem.dateString}] 판매 내역 없음`;
+                    const holidayTooltip = holidays.length > 0
+                      ? `\n공휴일: ${holidays.map((holiday) => holiday.name).join(', ')}`
+                      : '';
 
                     return (
                       <button
                         type="button"
                         key={index}
-                        title={tooltipText}
+                        title={`${orderTooltip}${holidayTooltip}`}
                         onClick={() => {
                           setSelectedDashboardDate(dayItem.dateString);
                           setIsCalendarOpen(false);
@@ -537,6 +580,23 @@ export default function AdminDashboard() {
                             <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>
                           )}
                         </div>
+
+                        {holidays.length > 0 && (
+                          <div className="mt-1 flex w-full flex-col gap-0.5">
+                            {holidays.map((holiday, holidayIndex) => (
+                              <span
+                                key={`${dayItem.dateString}-${holidayIndex}`}
+                                className={`w-full truncate rounded px-1 py-0.5 text-[8px] font-bold leading-tight md:text-[9px] ${
+                                  holiday.substitute
+                                    ? 'bg-amber-100 text-amber-800'
+                                    : 'bg-rose-100 text-rose-700'
+                                }`}
+                              >
+                                {holiday.name}
+                              </span>
+                            ))}
+                          </div>
+                        )}
 
                         {/* Revenue and items */}
                         <div className="mt-1 md:mt-2 w-full flex-grow flex flex-col justify-end">
