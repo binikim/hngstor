@@ -13,7 +13,7 @@ import {
 import { motion } from 'motion/react';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth, db, handleFirestoreError, OperationType } from '../firebase';
-import { collection, onSnapshot, query, orderBy, limit, addDoc, serverTimestamp, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, limit, getDocs, doc, getDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useCart } from '../context/CartContext';
 import AdultImageGate from '../components/AdultImageGate';
@@ -160,53 +160,9 @@ const ProductCard = ({ product }: ProductCardProps) => {
   );
 };
 
-// --- Seed Data Function ---
-const seedProducts = async () => {
-  const productsRef = collection(db, 'products');
-  const snapshot = await getDocs(productsRef);
-  
-  if (snapshot.empty) {
-    const initialProducts = [
-      {
-        category: "여성 성인용품",
-        name: "실크 웨이브 프리미엄 진동기",
-        price: 129000,
-        image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=800",
-        badge: "HOT",
-        createdAt: serverTimestamp()
-      },
-      {
-        category: "러브젤",
-        name: "워터베이직 수용성 루브리컨트",
-        price: 24000,
-        image: "https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?auto=format&fit=crop&q=80&w=800",
-        createdAt: serverTimestamp()
-      },
-      {
-        category: "남성 성인용품",
-        name: "티타늄 엑스 스마트 링",
-        price: 89000,
-        image: "https://images.unsplash.com/photo-1618331835717-801e976710b2?auto=format&fit=crop&q=80&w=800",
-        createdAt: serverTimestamp()
-      },
-      {
-        category: "섹시속옷",
-        name: "미드나잇 레이스 란제리 세트",
-        price: 65000,
-        image: "https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?auto=format&fit=crop&q=80&w=800",
-        badge: "LIMITED",
-        createdAt: serverTimestamp()
-      }
-    ];
-
-    for (const p of initialProducts) {
-      await addDoc(productsRef, p);
-    }
-  }
-};
-
 export default function Home() {
   const navigate = useNavigate();
+  const { isAdultConfirmed } = useAdultConfirmation();
   const [activeFilter, setActiveFilter] = useState("전체");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -215,7 +171,7 @@ export default function Home() {
   const [categoriesData, setCategoriesData] = useState<Category[]>([]);
 
   useEffect(() => {
-    seedProducts(); // Seed if empty
+    let active = true;
 
     async function loadPageData() {
       try {
@@ -223,6 +179,8 @@ export default function Home() {
           getDoc(doc(db, 'siteContent', 'home')),
           getDoc(doc(db, 'siteContent', 'categories'))
         ]);
+
+        if (!active) return;
         
         let homeData = null;
         if (homeDoc.exists()) {
@@ -233,29 +191,36 @@ export default function Home() {
           setCategoriesData(catDoc.data().content);
         }
 
+        if (!isAdultConfirmed) {
+          setProducts([]);
+          return;
+        }
+
         if (homeData?.featuredProductIds?.length > 0) {
           const productPromises = homeData.featuredProductIds.map((id: string) => getDoc(doc(db, 'products', id)));
           const productSnaps = await Promise.all(productPromises);
+          if (!active) return;
           const productData = productSnaps
             .filter(snap => snap.exists())
             .map(snap => ({ id: snap.id, ...snap.data() } as Product));
           setProducts(productData);
-          setLoading(false);
         } else {
           // Fallback to latest
           const q = query(collection(db, 'products'), orderBy('createdAt', 'desc'), limit(8));
           const snapshot = await getDocs(q);
+          if (!active) return;
           const productData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
           setProducts(productData);
-          setLoading(false);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
-        setLoading(false);
+      } finally {
+        if (active) setLoading(false);
       }
     }
     loadPageData();
-  }, []);
+    return () => { active = false; };
+  }, [isAdultConfirmed]);
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
@@ -335,7 +300,7 @@ export default function Home() {
           <h2 className="text-4xl md:text-5xl font-headline font-bold tracking-tight mb-8">
             {homeContent?.productsTitle || '인기 제품'}
           </h2>
-          <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
+          {isAdultConfirmed && <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
             {["전체", "베스트셀러", "특가상품", "한정수량"].map((filter) => (
               <button 
                 key={filter}
@@ -349,11 +314,13 @@ export default function Home() {
                 {filter}
               </button>
             ))}
-          </div>
+          </div>}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-16">
-          {loading ? (
+          {!isAdultConfirmed ? (
+            <AdultImageGate className="col-span-full min-h-[280px] rounded-2xl bg-surface-container-low" />
+          ) : loading ? (
             [1, 2, 3, 4].map(i => (
               <div key={i} className="animate-pulse">
                 <div className="aspect-[3/4] bg-surface-container-low rounded-2xl mb-6"></div>

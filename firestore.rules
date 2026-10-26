@@ -1,8 +1,93 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if true;
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (request.auth.token.get('email', '').lower() == 'admin@hng.com' ||
+         request.auth.token.get('email', '').lower() == 'kimsabin71@gmail.com' ||
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'user') == 'admin'));
+    }
+
+    function isDefaultAdmin() {
+      return isAuthenticated() &&
+        (request.auth.token.get('email', '').lower() == 'admin@hng.com' ||
+         request.auth.token.get('email', '').lower() == 'kimsabin71@gmail.com');
+    }
+
+    function isAdultConfirmed() {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('adultConfirmedAt', null) is timestamp;
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAny(['uid', 'email', 'role']) &&
+        (!('email' in data) || isValidEmail(data.email)) &&
+        (!('role' in data) || data.role in ['admin', 'user']);
+    }
+
+    function isValidOrder(data) {
+      return data.userId == request.auth.uid &&
+        data.keys().hasAll(['items', 'status', 'createdAt', 'totalPrice', 'shippingInfo']);
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin() || isDefaultAdmin();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data) &&
+        request.resource.data.uid == request.auth.uid &&
+        (request.resource.data.role == 'user' || isAdmin() || isDefaultAdmin());
+      allow update: if (isOwner(userId) && isValidUser(request.resource.data) &&
+        request.resource.data.uid == userId &&
+        (request.resource.data.role == resource.data.role || isAdmin() || isDefaultAdmin())) ||
+        isAdmin() || isDefaultAdmin();
+      allow delete: if isOwner(userId) || isAdmin() || isDefaultAdmin();
+    }
+
+    match /products/{productId} {
+      allow read: if isAdmin() || isDefaultAdmin() || isAdultConfirmed();
+      allow create, update, delete: if isAdmin() || isDefaultAdmin();
+    }
+
+    match /orders/{orderId} {
+      allow read: if isAuthenticated() &&
+        (request.auth.uid == resource.data.userId || isAdmin() || isDefaultAdmin());
+      allow create: if isAuthenticated() && isValidOrder(request.resource.data);
+      allow update: if (isAdmin() || isDefaultAdmin()) && isValidOrder(request.resource.data);
+      allow delete: if isAdmin() || isDefaultAdmin();
+    }
+
+    match /siteContent/{contentId} {
+      allow read: if true;
+      allow write: if isAdmin() || isDefaultAdmin();
+    }
+
+    match /inquiries/{inquiryId} {
+      allow create: if request.resource.data.keys().hasAll(['name', 'email', 'subject', 'message', 'status', 'createdAt']) &&
+        request.resource.data.keys().hasOnly(['name', 'email', 'subject', 'message', 'status', 'createdAt']) &&
+        request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 120 &&
+        isValidEmail(request.resource.data.email) &&
+        request.resource.data.subject is string && request.resource.data.subject.size() > 0 && request.resource.data.subject.size() <= 160 &&
+        request.resource.data.message is string && request.resource.data.message.size() > 0 && request.resource.data.message.size() <= 5000 &&
+        request.resource.data.status == 'new' &&
+        request.resource.data.createdAt is string && request.resource.data.createdAt.size() > 0 && request.resource.data.createdAt.size() <= 40;
+      allow read, update, delete: if isAdmin() || isDefaultAdmin();
+    }
+
+    match /{path=**} {
+      allow read, write: if false;
     }
   }
 }

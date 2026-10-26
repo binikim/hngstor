@@ -138,6 +138,13 @@ export default function CategoryPage() {
 
   useEffect(() => {
     async function fetchProducts() {
+      if (!isAdultConfirmed) {
+        setProducts([]);
+        setProductsLoading(false);
+        return;
+      }
+
+      setProductsLoading(true);
       try {
         const querySnapshot = await getDocs(collection(db, 'products'));
         const allProducts = querySnapshot.docs.map(doc => ({
@@ -152,7 +159,7 @@ export default function CategoryPage() {
       }
     }
     fetchProducts();
-  }, []);
+  }, [isAdultConfirmed]);
 
   const filteredProducts = products.filter(product => 
     data ? matchCategory(product.category, data.title) : false

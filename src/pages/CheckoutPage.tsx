@@ -27,7 +27,7 @@ declare global {
   }
 }
 
-import { collection, addDoc, serverTimestamp, doc, updateDoc, getDoc, increment } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 import { auth, db, handleFirestoreError, OperationType } from '../firebase';
 import {
   PAYMENT_METHOD_LABELS,
@@ -283,14 +283,6 @@ export default function CheckoutPage() {
 
         const orderRef = await addDoc(collection(db, 'orders'), orderData);
 
-        // Update stock
-        for (const item of cart) {
-          const productRef = doc(db, 'products', item.id);
-          await updateDoc(productRef, {
-            stock: increment(-item.quantity)
-          });
-        }
-
         setCreatedOrderId(orderRef.id);
         setIsCashModalOpen(true);
         setIsSubmitting(false);
@@ -380,14 +372,6 @@ export default function CheckoutPage() {
             };
 
             const orderRef = await addDoc(collection(db, 'orders'), orderData);
-
-            // Update stock
-            for (const item of cart) {
-              const productRef = doc(db, 'products', item.id);
-              await updateDoc(productRef, {
-                stock: increment(-item.quantity)
-              });
-            }
 
             clearCart();
             alert(isVirtualAccount ? '가상계좌가 발급되었습니다. 입금 확인 후 배송이 시작됩니다.' : '결제 및 주문이 완료되었습니다!');
